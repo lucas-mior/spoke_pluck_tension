@@ -18,7 +18,7 @@ order = 5
 # sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
 
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-q = Queue()
+data_queue = Queue()
 app = QtWidgets.QApplication([])
 
 main_window = QtWidgets.QWidget()
@@ -73,9 +73,9 @@ def detect_fundamental_autocorr(signal, fs):
 def update_plot():
     global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time
 
-    if q.empty():
+    if data_queue.empty():
         return
-    data = q.get()
+    data = data_queue.get()
 
     # filtered = sosfilt(sos, data)
     filtered = data
@@ -120,7 +120,7 @@ def update_plot():
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(status)
-    q.put(indata[:, 0].copy())
+    data_queue.put(indata[:, 0].copy())
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
