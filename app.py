@@ -120,7 +120,10 @@ def update_plot():
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(status)
-    data_queue.put(indata[:, 0].copy())
+    t0 = time_info.inputBufferAdcTime
+    t1 = time_info.currentTime
+    print(f"{t1-t0=}")
+    data_queue.put(indata[:, 0])
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
