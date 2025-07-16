@@ -5,25 +5,30 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 from scipy.signal import butter, sosfilt
 from queue import Queue
 
+# === Audio Parameters ===
 sample_rate = 44100
 blocksize = 4096
 
+# === Spoke Parameters ===
 steel_density = 8000  # kg/m³
-spoke_diameter = 0.002  # meters (2mm)
-spoke_area = np.pi*(spoke_diameter / 2) ** 2
-mu_inox_2mm = steel_density*spoke_area
+spoke_diameter = 0.002  # meters
+spoke_area = np.pi * (spoke_diameter / 2) ** 2
+mu_inox_2mm = steel_density * spoke_area
 spoke_length = 0.20  # meters
 
+# === Compute expected frequency range
 def compute_frequency(tension):
-    return (1/(2*spoke_length))*np.sqrt(tension / mu_inox_2mm)
+    return (1 / (2 * spoke_length)) * np.sqrt(tension / mu_inox_2mm)
 
 f_low = compute_frequency(500)   # ~250 Hz
 f_high = compute_frequency(2000) # ~500 Hz
-print(f"{f_low=} {f_high=}")
+print(f"{f_low=:.1f} {f_high=:.1f}")
 
+# === Band-pass filter for spoke range
 band = [f_low, f_high]
 sos = butter(5, band, btype='bandpass', fs=sample_rate, output='sos')
 
+# === PyQt5 setup
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 q = Queue()
 app = QtWidgets.QApplication([])
@@ -53,12 +58,12 @@ plot.setXRange(0, 1500)
 plot.setYRange(-100, 0)
 
 def compute_tension(frequency):
-    return 4*(spoke_length**2)*(frequency**2)*mu_inox_2mm
+    return 4 * (spoke_length ** 2) * (frequency ** 2) * mu_inox_2mm
 
 def detect_fundamental_autocorr(signal, fs):
     signal = signal - np.mean(signal)
     corr = np.correlate(signal, signal, mode='full')
-    corr = corr[len(corr)//2:]
+    corr = corr[len(corr) // 2:]
 
     min_lag = int(fs / f_high)
     max_lag = int(fs / f_low)
@@ -72,36 +77,46 @@ def detect_fundamental_autocorr(signal, fs):
 last_valid_frequency = None
 last_valid_tension = None
 last_valid_time = QtCore.QTime.currentTime()
-hold_duration = 1.0  # seconds
+last_update_time = QtCore.QTime.currentTime()
+
+hold_duration = 1.0         # how long to keep displaying old value
+min_update_interval = 300   # milliseconds
+min_freq_change = 5.0       # Hz
 
 def update_plot():
-    global last_valid_frequency, last_valid_tension, last_valid_time
+    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time
 
     if q.empty():
         return
     data = q.get()
 
     filtered = sosfilt(sos, data)
-    windowed = filtered*np.hanning(len(filtered))
+    windowed = filtered * np.hanning(len(filtered))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_db = 20*np.log10(spectrum)
+    spectrum_db = 20 * np.log10(spectrum)
 
     curve.setData(freqs, spectrum_db)
 
+    now = QtCore.QTime.currentTime()
     fundamental = detect_fundamental_autocorr(filtered, sample_rate)
-    if f_low < fundamental < f_high:
+
+    update_allowed = last_update_time.msecsTo(now) > min_update_interval
+    freq_diff_ok = (last_valid_frequency is None or abs(fundamental - last_valid_frequency) > min_freq_change)
+
+    if f_low < fundamental < f_high and update_allowed and freq_diff_ok:
         tension = compute_tension(fundamental)
         last_valid_frequency = fundamental
         last_valid_tension = tension
-        last_valid_time = QtCore.QTime.currentTime()
-    else:
-        elapsed = last_valid_time.msecsTo(QtCore.QTime.currentTime()) / 1000
-        if elapsed > hold_duration:
-            last_valid_frequency = None
-            last_valid_tension = None
+        last_valid_time = now
+        last_update_time = now
 
-    if last_valid_frequency:
+    elapsed = last_valid_time.msecsTo(now) / 1000
+    if elapsed > hold_duration:
+        last_valid_frequency = None
+        last_valid_tension = None
+
+    if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         peak_text.setPos(last_valid_frequency, -10)
         peak_text.setText(f"{last_valid_frequency:.1f} Hz")
