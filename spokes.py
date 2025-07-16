@@ -9,6 +9,13 @@ sample_rate = 44100
 blocksize = 4096
 cutoff_freq = 1500
 
+steel_density = 8000  # kg/m³
+spoke_diameter = 0.002  # meters
+spoke_area = np.pi*(spoke_diameter / 2)**2
+mu_inox_2mm = steel_density*spoke_area
+
+spoke_length = 0.29  # meters
+
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 sos = butter(5, cutoff_freq, btype='low', fs=sample_rate, output='sos')
 q = Queue()
@@ -23,6 +30,10 @@ freq_label = QtWidgets.QLabel("Frequency: -- Hz")
 freq_label.setStyleSheet("font-size: 24pt; color: cyan; background-color: black;")
 main_layout.addWidget(freq_label)
 
+tension_label = QtWidgets.QLabel("Tension: -- N")
+tension_label.setStyleSheet("font-size: 18pt; color: orange; background-color: black;")
+main_layout.addWidget(tension_label)
+
 win = pg.GraphicsLayoutWidget()
 main_layout.addWidget(win)
 plot = win.addPlot(title="Frequency Spectrum (dB)")
@@ -35,13 +46,16 @@ plot.setLabel('bottom', 'Frequency (Hz)')
 plot.setXRange(0, 1500)
 plot.setYRange(-100, 0)
 
+def compute_tension(frequency):
+    return 4*(spoke_length**2)*(frequency**2)*mu_inox_2mm
+
 def detect_fundamental_autocorr(signal, fs):
     signal = signal - np.mean(signal)
     corr = np.correlate(signal, signal, mode='full')
     corr = corr[len(corr)//2:]
 
-    min_lag = int(fs / 1400)  # max frequency ~1400 Hz
-    max_lag = int(fs / 70)    # min frequency ~70 Hz
+    min_lag = int(fs / 1400)  # Max freq ~1400 Hz
+    max_lag = int(fs / 70)    # Min freq ~70 Hz
     corr[:min_lag] = 0
 
     peak_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
@@ -64,11 +78,14 @@ def update_plot():
 
     fundamental = detect_fundamental_autocorr(filtered, sample_rate)
     if 70 < fundamental < 1400:
+        tension = compute_tension(fundamental)
         peak_text.setPos(fundamental, -10)
         peak_text.setText(f"{fundamental:.1f} Hz")
         freq_label.setText(f"Frequency: {fundamental:.1f} Hz")
+        tension_label.setText(f"Tension: {tension:.1f} N")
     else:
         freq_label.setText("Frequency: -- Hz")
+        tension_label.setText("Tension: -- N")
 
     plot.setYRange(-100, max(-30, np.max(spectrum_db) + 10))
 
@@ -86,7 +103,7 @@ with sd.InputStream(callback=audio_callback,
                     samplerate=sample_rate,
                     blocksize=blocksize,
                     latency=0.1):
-    main_window.setWindowTitle("Guitar Frequency Analyzer")
+    main_window.setWindowTitle("Spoke Tension Analyzer")
     main_window.resize(800, 600)
     main_window.show()
     app.exec()
