@@ -11,17 +11,18 @@ blocksize = 4096
 
 steel_density = 8000  # kg/m³
 spoke_diameter = 0.002  # meters
-spoke_area = np.pi * (spoke_diameter / 2) ** 2
-mu_inox_2mm = steel_density * spoke_area
 spoke_length = 0.20  # meters
+spoke_area = np.pi*(spoke_diameter / 2) ** 2
+mu_inox_2mm = steel_density*spoke_area
 
 
 def compute_frequency(tension):
-    return (1 / (2 * spoke_length)) * np.sqrt(tension / mu_inox_2mm)
+    return (1 / (2*spoke_length))*np.sqrt(tension / mu_inox_2mm)
 
 
 def compute_tension(frequency):
-    return 4 * (spoke_length ** 2) * (frequency ** 2) * mu_inox_2mm
+    return 4*(spoke_length ** 2)*(frequency ** 2)*mu_inox_2mm
+
 
 f_low = compute_frequency(500)
 f_high = compute_frequency(2000)
@@ -90,10 +91,10 @@ def update_plot():
     data = q.get()
 
     filtered = sosfilt(sos, data)
-    windowed = filtered * np.hanning(len(filtered))
+    windowed = filtered*np.hanning(len(filtered))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_db = 20 * np.log10(spectrum)
+    spectrum_db = 20*np.log10(spectrum)
 
     curve.setData(freqs, spectrum_db)
 
