@@ -10,11 +10,11 @@ blocksize = 4096
 cutoff_freq = 1500
 
 steel_density = 8000  # kg/m³
-spoke_diameter = 0.002  # meters
+spoke_diameter = 0.002  # meters (only after crossing)
 spoke_area = np.pi*(spoke_diameter / 2)**2
 mu_inox_2mm = steel_density*spoke_area
 
-spoke_length = 0.29  # meters
+spoke_length = 0.20  # meters
 
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 sos = butter(5, cutoff_freq, btype='low', fs=sample_rate, output='sos')
