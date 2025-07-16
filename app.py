@@ -15,7 +15,7 @@ print(f"{f_low=:.1f} {f_high=:.1f}")
 
 band = [f_low, f_high]
 order = 5
-sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
+# sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
 
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 q = Queue()
@@ -77,7 +77,8 @@ def update_plot():
         return
     data = q.get()
 
-    filtered = sosfilt(sos, data)
+    # filtered = sosfilt(sos, data)
+    filtered = data
     windowed = filtered*np.hanning(len(filtered))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
@@ -123,13 +124,13 @@ def audio_callback(indata, frames, time_info, status):
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
-timer.start(30)
+timer.start(10)
 
 with sd.InputStream(callback=audio_callback,
                     channels=1,
                     samplerate=sample_rate,
                     blocksize=blocksize,
-                    latency=0.1):
+                    latency="low"):
     main_window.setWindowTitle("Spoke Tension Analyzer")
     main_window.resize(800, 600)
     main_window.show()
