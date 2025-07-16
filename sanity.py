@@ -8,13 +8,13 @@ mu_inox_2mm = steel_density*spoke_area
 spoke_length = 0.20  # meters
 
 def compute_tension(frequency):
-    return 4 * (spoke_length ** 2) * (frequency ** 2) * mu_inox_2mm
+    return 4*(spoke_length**2)*(frequency**2)*mu_inox_2mm
 
 def compute_frequency(tension):
-    return (1 / (2 * spoke_length)) * np.sqrt(tension / mu_inox_2mm)
+    return (1/(2*spoke_length))*np.sqrt(tension/mu_inox_2mm)
 
-Tmin = 980  # Newtons
-Tmax = 1275  # Newtons
+Tmin = 500  # Newtons
+Tmax = 2000  # Newtons
 
 Fmin = round(compute_frequency(Tmin))
 Fmax = round(compute_frequency(Tmax))

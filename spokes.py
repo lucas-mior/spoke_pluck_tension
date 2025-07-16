@@ -7,19 +7,25 @@ from queue import Queue
 
 sample_rate = 44100
 blocksize = 4096
-cutoff_freq = 1500
 
 steel_density = 8000  # kg/m³
-spoke_diameter = 0.002  # meters (only after crossing)
-spoke_area = np.pi*(spoke_diameter / 2)**2
+spoke_diameter = 0.002  # meters (2mm)
+spoke_area = np.pi*(spoke_diameter / 2) ** 2
 mu_inox_2mm = steel_density*spoke_area
-
 spoke_length = 0.20  # meters
 
-freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-sos = butter(5, cutoff_freq, btype='low', fs=sample_rate, output='sos')
-q = Queue()
+def compute_frequency(tension):
+    return (1/(2*spoke_length))*np.sqrt(tension / mu_inox_2mm)
 
+f_low = compute_frequency(500)   # ~250 Hz
+f_high = compute_frequency(2000) # ~500 Hz
+print(f"{f_low=} {f_high=}")
+
+band = [f_low, f_high]
+sos = butter(5, band, btype='bandpass', fs=sample_rate, output='sos')
+
+freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+q = Queue()
 app = QtWidgets.QApplication([])
 
 main_window = QtWidgets.QWidget()
@@ -30,7 +36,7 @@ freq_label = QtWidgets.QLabel("Frequency: -- Hz")
 freq_label.setStyleSheet("font-size: 24pt; color: cyan; background-color: black;")
 main_layout.addWidget(freq_label)
 
-tension_label = QtWidgets.QLabel("Tension: -- N")
+tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
 tension_label.setStyleSheet("font-size: 18pt; color: orange; background-color: black;")
 main_layout.addWidget(tension_label)
 
@@ -54,8 +60,8 @@ def detect_fundamental_autocorr(signal, fs):
     corr = np.correlate(signal, signal, mode='full')
     corr = corr[len(corr)//2:]
 
-    min_lag = int(fs / 1400)  # Max freq ~1400 Hz
-    max_lag = int(fs / 70)    # Min freq ~70 Hz
+    min_lag = int(fs / f_high)
+    max_lag = int(fs / f_low)
     corr[:min_lag] = 0
 
     peak_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
@@ -63,30 +69,48 @@ def detect_fundamental_autocorr(signal, fs):
         return 0.0
     return fs / peak_idx
 
+last_valid_frequency = None
+last_valid_tension = None
+last_valid_time = QtCore.QTime.currentTime()
+hold_duration = 1.0  # seconds
+
 def update_plot():
+    global last_valid_frequency, last_valid_tension, last_valid_time
+
     if q.empty():
         return
     data = q.get()
 
     filtered = sosfilt(sos, data)
-    windowed = filtered * np.hanning(len(filtered))
+    windowed = filtered*np.hanning(len(filtered))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_db = 20 * np.log10(spectrum)
+    spectrum_db = 20*np.log10(spectrum)
 
     curve.setData(freqs, spectrum_db)
 
     fundamental = detect_fundamental_autocorr(filtered, sample_rate)
-    if 70 < fundamental < 1400:
+    if f_low < fundamental < f_high:
         tension = compute_tension(fundamental)
-        kgf = tension / 9.80665
-        peak_text.setPos(fundamental, -10)
-        peak_text.setText(f"{fundamental:.1f} Hz")
-        freq_label.setText(f"Frequency: {fundamental:.1f} Hz")
-        tension_label.setText(f"Tension: {tension:.1f} N  ({kgf:.1f} kgf)")
+        last_valid_frequency = fundamental
+        last_valid_tension = tension
+        last_valid_time = QtCore.QTime.currentTime()
+    else:
+        elapsed = last_valid_time.msecsTo(QtCore.QTime.currentTime()) / 1000
+        if elapsed > hold_duration:
+            last_valid_frequency = None
+            last_valid_tension = None
+
+    if last_valid_frequency:
+        kgf = last_valid_tension / 9.80665
+        peak_text.setPos(last_valid_frequency, -10)
+        peak_text.setText(f"{last_valid_frequency:.1f} Hz")
+        freq_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
+        tension_label.setText(f"Tension: {last_valid_tension:.1f} N  ({kgf:.1f} kgf)")
     else:
         freq_label.setText("Frequency: -- Hz")
         tension_label.setText("Tension: -- N  (-- kgf)")
+        peak_text.setText("")
 
     plot.setYRange(-100, max(-30, np.max(spectrum_db) + 10))
 
