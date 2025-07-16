@@ -2,31 +2,47 @@ import numpy as np
 import sounddevice as sd
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
-from scipy.signal import butter, sosfilt
+from scipy.signal import butter, sosfilt, sosfreqz
 from queue import Queue
+import matplotlib.pyplot as plt
 
-# === Audio Parameters ===
 sample_rate = 44100
 blocksize = 4096
 
-# === Spoke Parameters ===
 steel_density = 8000  # kg/m³
 spoke_diameter = 0.002  # meters
 spoke_area = np.pi * (spoke_diameter / 2) ** 2
 mu_inox_2mm = steel_density * spoke_area
 spoke_length = 0.20  # meters
 
-# === Compute expected frequency range
 def compute_frequency(tension):
     return (1 / (2 * spoke_length)) * np.sqrt(tension / mu_inox_2mm)
 
-f_low = compute_frequency(500)   # ~250 Hz
-f_high = compute_frequency(2000) # ~500 Hz
+f_low = compute_frequency(500)
+f_high = compute_frequency(2000)
 print(f"{f_low=:.1f} {f_high=:.1f}")
 
-# === Band-pass filter for spoke range
 band = [f_low, f_high]
-sos = butter(5, band, btype='bandpass', fs=sample_rate, output='sos')
+order = 5
+sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
+
+w, h = sosfreqz(sos, worN=2000, fs=sample_rate)
+magnitude_db = 20 * np.log10(abs(h))
+
+# Plot
+plt.figure(figsize=(8, 4))
+plt.plot(w, magnitude_db)
+plt.title(f'{order}th-order Butterworth Band-pass Filter')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Magnitude (dB)')
+plt.grid(True)
+plt.axvline(f_low, color='green', linestyle='--', label='f_low')
+plt.axvline(f_high, color='red', linestyle='--', label='f_high')
+# plt.ylim([-80, 5])
+plt.legend()
+plt.tight_layout()
+plt.show()
+exit(0)
 
 # === PyQt5 setup
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
