@@ -15,8 +15,13 @@ spoke_area = np.pi * (spoke_diameter / 2) ** 2
 mu_inox_2mm = steel_density * spoke_area
 spoke_length = 0.20  # meters
 
+
 def compute_frequency(tension):
     return (1 / (2 * spoke_length)) * np.sqrt(tension / mu_inox_2mm)
+
+
+def compute_tension(frequency):
+    return 4 * (spoke_length ** 2) * (frequency ** 2) * mu_inox_2mm
 
 f_low = compute_frequency(500)
 f_high = compute_frequency(2000)
@@ -26,25 +31,6 @@ band = [f_low, f_high]
 order = 5
 sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
 
-w, h = sosfreqz(sos, worN=2000, fs=sample_rate)
-magnitude_db = 20 * np.log10(abs(h))
-
-# Plot
-plt.figure(figsize=(8, 4))
-plt.plot(w, magnitude_db)
-plt.title(f'{order}th-order Butterworth Band-pass Filter')
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('Magnitude (dB)')
-plt.grid(True)
-plt.axvline(f_low, color='green', linestyle='--', label='f_low')
-plt.axvline(f_high, color='red', linestyle='--', label='f_high')
-# plt.ylim([-80, 5])
-plt.legend()
-plt.tight_layout()
-plt.show()
-exit(0)
-
-# === PyQt5 setup
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 q = Queue()
 app = QtWidgets.QApplication([])
@@ -72,9 +58,6 @@ plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
 plot.setXRange(0, 1500)
 plot.setYRange(-100, 0)
-
-def compute_tension(frequency):
-    return 4 * (spoke_length ** 2) * (frequency ** 2) * mu_inox_2mm
 
 def detect_fundamental_autocorr(signal, fs):
     signal = signal - np.mean(signal)
