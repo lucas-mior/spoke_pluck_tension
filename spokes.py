@@ -26,25 +26,6 @@ band = [f_low, f_high]
 order = 5
 sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
 
-w, h = sosfreqz(sos, worN=2000, fs=sample_rate)
-magnitude_db = 20 * np.log10(abs(h))
-
-# Plot
-plt.figure(figsize=(8, 4))
-plt.plot(w, magnitude_db)
-plt.title(f'{order}th-order Butterworth Band-pass Filter')
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('Magnitude (dB)')
-plt.grid(True)
-plt.axvline(f_low, color='green', linestyle='--', label='f_low')
-plt.axvline(f_high, color='red', linestyle='--', label='f_high')
-# plt.ylim([-80, 5])
-plt.legend()
-plt.tight_layout()
-plt.show()
-exit(0)
-
-# === PyQt5 setup
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 q = Queue()
 app = QtWidgets.QApplication([])
