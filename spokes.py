@@ -11,9 +11,9 @@ blocksize = 4096
 
 steel_density = 8000  # kg/m³
 spoke_diameter = 0.002  # meters
+spoke_length = 0.20  # meters
 spoke_area = np.pi*(spoke_diameter / 2) ** 2
 mu_inox_2mm = steel_density*spoke_area
-spoke_length = 0.20  # meters
 
 
 def compute_frequency(tension):
