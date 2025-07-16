@@ -23,6 +23,7 @@ def compute_frequency(tension):
 def compute_tension(frequency):
     return 4*(spoke_length ** 2)*(frequency ** 2)*mu_inox_2mm
 
+
 f_low = compute_frequency(500)
 f_high = compute_frequency(2000)
 print(f"{f_low=:.1f} {f_high=:.1f}")
