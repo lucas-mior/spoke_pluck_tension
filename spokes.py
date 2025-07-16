@@ -79,13 +79,14 @@ def update_plot():
     fundamental = detect_fundamental_autocorr(filtered, sample_rate)
     if 70 < fundamental < 1400:
         tension = compute_tension(fundamental)
+        kgf = tension / 9.80665
         peak_text.setPos(fundamental, -10)
         peak_text.setText(f"{fundamental:.1f} Hz")
         freq_label.setText(f"Frequency: {fundamental:.1f} Hz")
-        tension_label.setText(f"Tension: {tension:.1f} N")
+        tension_label.setText(f"Tension: {tension:.1f} N  ({kgf:.1f} kgf)")
     else:
         freq_label.setText("Frequency: -- Hz")
-        tension_label.setText("Tension: -- N")
+        tension_label.setText("Tension: -- N  (-- kgf)")
 
     plot.setYRange(-100, max(-30, np.max(spectrum_db) + 10))
 
