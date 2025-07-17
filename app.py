@@ -15,7 +15,7 @@ print(f"{f_low=:.1f} {f_high=:.1f}")
 
 band = [f_low, f_high]
 order = 5
-# sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
+sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
 
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
@@ -42,7 +42,7 @@ plot.addItem(peak_text)
 
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
-plot.setXRange(0, 1500)
+plot.setXRange(0, 2000)
 plot.setYRange(-100, 0)
 
 last_valid_frequency = None
@@ -77,9 +77,8 @@ def update_plot():
         return
     data = data_queue.get()
 
-    # filtered = sosfilt(sos, data)
-    filtered = data
-    windowed = filtered*np.hanning(len(filtered))
+    data = sosfilt(sos, data)
+    windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
     spectrum_db = 20*np.log10(spectrum)
@@ -87,7 +86,7 @@ def update_plot():
     curve.setData(freqs, spectrum_db)
 
     now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorr(filtered, sample_rate)
+    fundamental = detect_fundamental_autocorr(data, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (last_valid_frequency is None or abs(fundamental - last_valid_frequency) > min_freq_change)
