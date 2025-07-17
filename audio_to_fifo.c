@@ -25,16 +25,16 @@ audio_callback(const void *inputBuffer,
     int16 *in = inputBuffer;
 
     if (statusFlags & paInputUnderflow) {
-        fprintf(stderr, "underflow\n");
+        fprintf(stderr, "input underflow\n");
     }
     if (statusFlags & paInputOverflow) {
-        fprintf(stderr, "overflow\n");
+        fprintf(stderr, "input overflow\n");
     }
     if (statusFlags & paOutputUnderflow) {
-        fprintf(stderr, "underflow\n");
+        fprintf(stderr, "output underflow\n");
     }
     if (statusFlags & paOutputOverflow) {
-        fprintf(stderr, "overflow\n");
+        fprintf(stderr, "output overflow\n");
     }
 
     if (inputBuffer == NULL) {
