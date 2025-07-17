@@ -91,8 +91,11 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     return sample_rate / peak_idx
 
 
+spectrum_max = 0
 def update_plot():
-    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time, spectrum_smoothed
+    global last_valid_frequency, last_valid_tension
+    global last_valid_time, last_update_time
+    global spectrum_smoothed, spectrum_max
 
     if data_queue.empty():
         return
@@ -106,6 +109,9 @@ def update_plot():
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
     spectrum_db = 20*np.log10(spectrum_smoothed)
+    if max(spectrum_db) > spectrum_max:
+        spectrum_max = max(spectrum_db)
+    plot.setYRange(-100, spectrum_max)
 
     curve.setData(frequencies, spectrum_db)
 
