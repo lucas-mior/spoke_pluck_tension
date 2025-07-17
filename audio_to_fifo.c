@@ -37,7 +37,7 @@ audio_callback(const void *inputBuffer,
 
 int main(void) {
     PaStream *stream;
-    PaError err;
+    PaError pa_error;
 
     int fifo = open(FIFO_PATH, O_WRONLY);
     if (fifo < 0) {
@@ -45,11 +45,11 @@ int main(void) {
         return 1;
     }
 
-    err = Pa_Initialize();
-    if (err != paNoError)
+    pa_error = Pa_Initialize();
+    if (pa_error != paNoError)
         goto error;
 
-    err = Pa_OpenDefaultStream(&stream,
+    pa_error = Pa_OpenDefaultStream(&stream,
                                1,
                                0,
                                paInt16,
@@ -57,11 +57,11 @@ int main(void) {
                                FRAMES_PER_BUFFER,
                                audio_callback,
                                &fifo);
-    if (err != paNoError)
+    if (pa_error != paNoError)
         goto error;
 
-    err = Pa_StartStream(stream);
-    if (err != paNoError)
+    pa_error = Pa_StartStream(stream);
+    if (pa_error != paNoError)
         goto error;
 
     printf("Streaming audio to FIFO... Press Ctrl+C to stop.\n");
@@ -77,6 +77,6 @@ int main(void) {
     return 0;
 
 error:
-    fprintf(stderr, "PortAudio error: %s\n", Pa_GetErrorText(err));
+    fprintf(stderr, "PortAudio error: %s\n", Pa_GetErrorText(pa_error));
     return 1;
 }
