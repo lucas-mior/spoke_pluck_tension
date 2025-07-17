@@ -104,10 +104,10 @@ def update_plot():
     data = data_queue.get()
 
     data = scipy.signal.sosfilt(bandpass, data)
-    windowed = data * np.hanning(len(data))
+    windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
+    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = 20*np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
@@ -189,7 +189,7 @@ else:
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
-timer.start(int(1000 * blocksize / sample_rate))
+timer.start(int(1000*blocksize / sample_rate))
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
