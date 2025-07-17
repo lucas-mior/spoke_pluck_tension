@@ -63,20 +63,21 @@ hold_duration = 1.0         # how long to keep displaying old value
 min_update_interval = 300   # milliseconds
 min_freq_change = 5.0       # Hz
 
+min_lag = int(sample_rate / frequency_max)
+max_lag = int(sample_rate / frequency_min)
 
-def detect_fundamental_autocorr(signal, fs):
+
+def detect_fundamental_autocorr(signal, sample_rate):
     signal = signal - np.mean(signal)
     corr = np.correlate(signal, signal, mode='full')
     corr = corr[len(corr) // 2:]
 
-    min_lag = int(fs / frequency_max)
-    max_lag = int(fs / frequency_min)
     corr[:min_lag] = 0
 
     peak_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
     if peak_idx == 0:
         return 0.0
-    return fs / peak_idx
+    return sample_rate / peak_idx
 
 
 def update_plot():
