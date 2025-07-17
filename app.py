@@ -120,20 +120,16 @@ def update_plot():
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(status)
-    t0 = time_info.inputBufferAdcTime
-    t1 = time_info.currentTime
-    print(f"{t1-t0=}")
     data_queue.put(indata[:, 0])
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
-timer.start(10)
+timer.start(33)
 
 with sd.InputStream(callback=audio_callback,
                     channels=1,
                     samplerate=sample_rate,
-                    blocksize=blocksize,
-                    latency="low"):
+                    blocksize=blocksize):
     main_window.setWindowTitle("Spoke Tension Analyzer")
     main_window.resize(800, 600)
     main_window.show()
