@@ -35,7 +35,7 @@ frequency_label.setStyleSheet("font-size: 24pt; color: cyan; background-color: b
 main_layout.addWidget(frequency_label)
 
 tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
-tension_label.setStyleSheet("font-size: 18pt; color: orange; background-color: black;")
+tension_label.setStyleSheet("font-size: 24pt; color: orange; background-color: black;")
 main_layout.addWidget(tension_label)
 
 window = pg.GraphicsLayoutWidget()
