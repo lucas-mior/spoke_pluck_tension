@@ -1,28 +1,30 @@
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
-from scipy.signal import butter, sosfilt, sosfreqz
-from queue import Queue
+import scipy
+import queue
+
 import spokes
 
 sample_rate = 44100
 blocksize = 4096
 alpha = 0.8
 
-frequency_min = 50  #spokes.frequency(500)
-frequency_max = 1500  #spokes.frequency(2000)
+frequency_min = 50
+frequency_max = 1500
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
 
 order = 5
-bandpass = butter(order,
-                  [frequency_min, frequency_max],
-                  btype='bandpass',
-                  fs=sample_rate,
-                  output='sos')
+bandpass = scipy.signal.butter(order,
+                               [frequency_min, frequency_max],
+                               btype='bandpass',
+                               fs=sample_rate,
+                               output='sos')
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-data_queue = Queue()
+data_queue = queue.Queue()
 spectrum_smoothed = np.zeros(len(frequencies))
 
 qt_application = QtWidgets.QApplication([])
@@ -52,16 +54,16 @@ plot.addItem(peak_text)
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
 plot.setXRange(0, 2000)
-plot.setYRange(-100, 0)
+plot.setYRange(-100, 20)
 
 last_valid_frequency = None
 last_valid_tension = None
 last_valid_time = QtCore.QTime.currentTime()
 last_update_time = QtCore.QTime.currentTime()
 
-hold_duration = 1.0         # how long to keep displaying old value
-min_update_interval = 300   # milliseconds
-min_freq_change = 5.0       # Hz
+hold_duration = 1.0
+min_update_interval = 300
+min_freq_change = 5.0
 
 min_lag = int(sample_rate / frequency_max)
 max_lag = int(sample_rate / frequency_min)
@@ -89,7 +91,7 @@ def update_plot():
         data_queue.get()
     data = data_queue.get()
 
-    data = sosfilt(bandpass, data)
+    data = scipy.signal.sosfilt(bandpass, data)
     windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
@@ -131,23 +133,36 @@ def update_plot():
 
     return
 
+audio_data, file_sample_rate = sf.read("output.wav", dtype='int16')
+if file_sample_rate != sample_rate:
+    print(f"Sample rate mismatch: {file_sample_rate} != {sample_rate}")
+    exit(1)
 
-def audio_callback(indata, frames, time_info, status):
-    if status:
-        print(status)
-    data_queue.put(indata[:, 0])
-    return
+if audio_data.ndim > 1:
+    audio_data = np.mean(audio_data, axis=1)
+
+frame_index = 0
+output_stream = sd.OutputStream(samplerate=sample_rate, channels=1, blocksize=blocksize)
+output_stream.start()
+
+def stream_from_file():
+    global frame_index
+    if frame_index + blocksize >= len(audio_data):
+        timer.stop()
+        return
+    block = audio_data[frame_index:frame_index + blocksize]
+    frame_index += blocksize
+    data_queue.put(block)
+    data_queue.put(block)
+    output_stream.write(block.astype(np.float32) / np.iinfo(np.int16).max)
 
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
-timer.start(33)
+timer.timeout.connect(stream_from_file)
+timer.start(int(1000 * blocksize / sample_rate))  # Real-time interval
 
-with sd.InputStream(callback=audio_callback,
-                    channels=1,
-                    samplerate=sample_rate,
-                    blocksize=blocksize):
-    main_window.setWindowTitle("Spoke Tension Analyzer")
-    main_window.resize(800, 600)
-    main_window.show()
-    qt_application.exec()
+main_window.setWindowTitle("Spoke Tension Analyzer (File Mode)")
+main_window.resize(800, 600)
+main_window.show()
+qt_application.exec()
