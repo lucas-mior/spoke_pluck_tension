@@ -15,6 +15,7 @@ typedef int16_t int16;
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 4096
 #define FIFO_PATH "/tmp/audio_fifo"
+#define OVERFLOW_CHECK_INTERVAL 2
 
 static atomic_int overflow_count = 0;
 static volatile sig_atomic_t running = 1;
@@ -140,20 +141,19 @@ int main(void) {
 
     printf("Streaming audio to FIFO... Press Ctrl+C to stop.\n");
 
-#define SLEEP 2
     while (running) {
         int count;
         double average;
-        sleep(SLEEP);
+        sleep(OVERFLOW_CHECK_INTERVAL);
 
         count = atomic_exchange(&overflow_count, 0);
         total += count;
-        seconds += SLEEP;
+        seconds += OVERFLOW_CHECK_INTERVAL;
 
         average = (double)total / seconds;
         if ((average > 0.1) || (count > 0)) {
             printf("Input overflows in last %d seconds: %d | average: %.2f/s\n",
-                   SLEEP, count, average);
+                   OVERFLOW_CHECK_INTERVAL, count, average);
         }
     }
 
