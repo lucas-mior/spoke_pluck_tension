@@ -78,6 +78,8 @@ def update_plot():
 
     if data_queue.empty():
         return
+    while data_queue.qsize() > 1:
+        data_queue.get()
     data = data_queue.get()
 
     data = sosfilt(sos, data)
