@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <portaudio.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 typedef int16_t int16;
 
@@ -15,19 +19,18 @@ static int audio_callback(const void *inputBuffer, void *outputBuffer,
                           const PaStreamCallbackTimeInfo* timeInfo,
                           PaStreamCallbackFlags statusFlags,
                           void *userData) {
-    FILE *fifo = (FILE *)userData;
+    int *fifo = userData;
     const int16 *in = (const int16 *)inputBuffer;
 
     if (inputBuffer == NULL) {
         for (unsigned long i = 0; i < framesPerBuffer; i++) {
             int16 zero = 0;
-            fwrite(&zero, sizeof(int16), 1, fifo);
+            write(*fifo, &zero, 1);
         }
     } else {
-        fwrite(in, sizeof(int16), framesPerBuffer, fifo);
+        write(*fifo, in, framesPerBuffer*sizeof(int16));
     }
 
-    fflush(fifo);
     return paContinue;
 }
 
@@ -35,9 +38,9 @@ int main(void) {
     PaStream *stream;
     PaError err;
 
-    FILE *fifo = fopen(FIFO_PATH, "wb");
-    if (!fifo) {
-        perror("fopen FIFO");
+    int fifo = open(FIFO_PATH, O_WRONLY);
+    if (fifo < 0) {
+        fprintf(stderr, "Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
         return 1;
     }
 
@@ -52,7 +55,7 @@ int main(void) {
                                SAMPLE_RATE,
                                FRAMES_PER_BUFFER,
                                audio_callback,
-                               fifo);
+                               &fifo);
     if (err != paNoError)
         goto error;
 
@@ -68,7 +71,7 @@ int main(void) {
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();
-    fclose(fifo);
+    close(fifo);
 
     return 0;
 
