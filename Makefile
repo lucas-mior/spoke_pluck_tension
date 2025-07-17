@@ -5,7 +5,7 @@ CFLAGS += -Wall -Wextra -Wno-unsafe-buffer-usage -Wno-unused-macros -Wno-unused-
 CFLAGS += -Weverything -Wno-format-nonliteral
 CFLAGS += -Wfatal-errors -Werror
 
-LDFLAGS = -lm -lportaudio -lrtaudio
+LDFLAGS = -lm -lrtaudio
 
 SRC = audio_to_fifo.c
 
