@@ -21,6 +21,9 @@ freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
 app = QtWidgets.QApplication([])
 
+spectrum_db_smoothed = np.zeros(len(freqs))
+alpha = 0.2
+
 main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
@@ -71,7 +74,7 @@ def detect_fundamental_autocorr(signal, fs):
 
 
 def update_plot():
-    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time
+    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time, spectrum_db_smoothed
 
     if data_queue.empty():
         return
@@ -83,7 +86,8 @@ def update_plot():
     spectrum[spectrum == 0] = 1e-12
     spectrum_db = 20*np.log10(spectrum)
 
-    curve.setData(freqs, spectrum_db)
+    spectrum_db_smoothed = alpha * spectrum_db + (1 - alpha) * spectrum_db_smoothed
+    curve.setData(freqs, spectrum_db_smoothed)
 
     now = QtCore.QTime.currentTime()
     fundamental = detect_fundamental_autocorr(data, sample_rate)
