@@ -21,7 +21,7 @@ audio_callback(const void *inputBuffer,
                PaStreamCallbackFlags statusFlags,
                void *userData) {
     int *fifo = userData;
-    const int16 *in = (const int16 *)inputBuffer;
+    const int16 *in = inputBuffer;
 
     if (inputBuffer == NULL) {
         for (unsigned long i = 0; i < framesPerBuffer; i++) {
