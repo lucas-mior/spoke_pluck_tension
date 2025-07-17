@@ -5,7 +5,9 @@ import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
 import scipy
 import queue
-import threading
+import subprocess
+import atexit
+import os
 
 import spokes
 
@@ -161,6 +163,12 @@ def update_plot():
 
 frame_index = 0
 fifo_path = "/tmp/audio_fifo"
+
+if not os.path.exists(fifo_path):
+    os.mkfifo(fifo_path)
+
+fifo_proc = subprocess.Popen(["./audio_to_fifo"])
+atexit.register(fifo_proc.terminate)
 fifo = open(fifo_path, 'rb')
 
 timer = QtCore.QTimer()
