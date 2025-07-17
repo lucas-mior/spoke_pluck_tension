@@ -8,6 +8,7 @@ import spokes
 
 sample_rate = 44100
 blocksize = 4096
+alpha = 0.2
 
 frequency_min = 50  #spokes.frequency(500)
 frequency_max = 1000  #spokes.frequency(2000)
@@ -25,7 +26,6 @@ data_queue = Queue()
 qt_application = QtWidgets.QApplication([])
 
 spectrum_smoothed = np.zeros(len(frequencies))
-alpha = 0.2
 
 main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
