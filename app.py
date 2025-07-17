@@ -8,10 +8,10 @@ import spokes
 
 sample_rate = 44100
 blocksize = 4096
-alpha = 0.2
+alpha = 0.8
 
 frequency_min = 50  #spokes.frequency(500)
-frequency_max = 1000  #spokes.frequency(2000)
+frequency_max = 1500  #spokes.frequency(2000)
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
 
 order = 5
