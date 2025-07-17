@@ -103,7 +103,7 @@ int main(void) {
     int seconds = 0;
     uint32 buffer_frames;
 
-    /* signal(SIGINT, sigint_handler); */
+    signal(SIGINT, sigint_handler);
 
     if ((fifo = open(FIFO_PATH, O_WRONLY)) < 0) {
         error("Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
