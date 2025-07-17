@@ -22,7 +22,9 @@ audio_callback(const void *inputBuffer,
                PaStreamCallbackFlags statusFlags,
                void *userData) {
     int *fifo = userData;
-    int16 *in = inputBuffer;
+    const int16 *in = inputBuffer;
+    (void) outputBuffer;
+    (void) timeInfo;
 
     if (statusFlags & paInputUnderflow) {
         fprintf(stderr, "input underflow\n");
