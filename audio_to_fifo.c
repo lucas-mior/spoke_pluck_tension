@@ -18,22 +18,29 @@ typedef int16_t int16;
 atomic_int overflow_count = 0;
 volatile sig_atomic_t running = 1;
 
-int record_callback(void *outputBuffer, void *inputBuffer,
-                    unsigned int nFrames, double streamTime,
-                    unsigned int status, void *userData) {
+int16 buffer[FRAMES_PER_BUFFER] = {0};
+
+int
+record_callback(void *outputBuffer, void *inputBuffer,
+                unsigned int nFrames, double streamTime,
+                unsigned int status, void *userData) {
     int *fifo = userData;
     const int16 *in = inputBuffer;
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
+        printf("INPUT_OVERFLOW\n");
+        atomic_fetch_add(&overflow_count, 1);
+    }
+    if (status & RTAUDIO_STATUS_OUTPUT_UNDERFLOW) {
+        printf("OUTPUT_UNDERFLOW\n");
         atomic_fetch_add(&overflow_count, 1);
     }
 
     if (!in) {
         int16 zero = 0;
-        for (unsigned int i = 0; i < nFrames; i++)
-            write(*fifo, &zero, sizeof(zero));
+        write(*fifo, &buffer, sizeof(buffer));
     } else {
-        write(*fifo, in, nFrames * sizeof(*in));
+        write(*fifo, in, nFrames*sizeof(*in));
     }
 
     return 0;
@@ -44,10 +51,12 @@ void sigint_handler(int signum) {
 }
 
 int main(void) {
-    rtaudio_stream_parameters_t iParams;
-    rtaudio_stream_options_t options;
+    rtaudio_stream_parameters_t rt_stream_params;
+    rtaudio_stream_options_t rt_stream_options;
     rtaudio_t io = NULL;
-    int fifo, total = 0, seconds = 0;
+    int fifo;
+    int total = 0;
+    int seconds = 0;
 
     /* signal(SIGINT, sigint_handler); */
 
@@ -56,27 +65,26 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    io = rtaudio_create(RTAUDIO_API_UNSPECIFIED);
-    if (!io) {
+    if ((io = rtaudio_create(RTAUDIO_API_UNSPECIFIED)) == NULL) {
         fprintf(stderr, "Error initializing RtAudio.\n");
         exit(EXIT_FAILURE);
     }
 
-    iParams.device_id    = rtaudio_get_default_input_device(io);
-    iParams.num_channels = 1;
-    iParams.first_channel = 0;
+    rt_stream_params.device_id    = rtaudio_get_default_input_device(io);
+    rt_stream_params.num_channels = 1;
+    rt_stream_params.first_channel = 0;
 
-    options.flags = 0;
-    options.num_buffers = 0;
-    options.priority = 0;
-    options.name[0] = '\0';
+    rt_stream_options.flags = 0;
+    rt_stream_options.num_buffers = 0;
+    rt_stream_options.priority = 0;
+    rt_stream_options.name[0] = '\0';
 
     unsigned int buffer_frames = FRAMES_PER_BUFFER;
-    if (rtaudio_open_stream(io, NULL, &iParams,
-                             RTAUDIO_FORMAT_SINT16,
-                             SAMPLE_RATE, &buffer_frames,
-                             record_callback, &fifo,
-                             &options, NULL) != RTAUDIO_ERROR_NONE) {
+    if (rtaudio_open_stream(io, NULL, &rt_stream_params,
+                            RTAUDIO_FORMAT_SINT16,
+                            SAMPLE_RATE, &buffer_frames,
+                            record_callback, &fifo,
+                            &rt_stream_options, NULL) != RTAUDIO_ERROR_NONE) {
         fprintf(stderr, "Error opening RtAudio stream: %s\n", rtaudio_error(io));
         exit(EXIT_FAILURE);
     }
