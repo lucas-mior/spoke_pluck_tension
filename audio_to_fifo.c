@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -15,17 +16,59 @@ typedef int16_t int16;
 #define FRAMES_PER_BUFFER 4096
 #define FIFO_PATH "/tmp/audio_fifo"
 
-atomic_int overflow_count = 0;
-volatile sig_atomic_t running = 1;
+static atomic_int overflow_count = 0;
+static volatile sig_atomic_t running = 1;
 
-int16 buffer[FRAMES_PER_BUFFER] = {0};
+#ifndef INTEGERS
+#define INTEGERS
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+typedef unsigned long long ulonglong;
 
-int
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
+typedef size_t usize;
+typedef ssize_t isize;
+#endif
+
+static void
+error(char *format, ...) {
+    char buffer[BUFSIZ];
+    va_list args;
+    int32 n;
+
+    va_start(args, format);
+    n = vsnprintf(buffer, sizeof(buffer) - 1, format, args);
+    va_end(args);
+
+    if (n < 0 || n > (int32)sizeof(buffer)) {
+        fprintf(stderr, "Error in vsnprintf()\n");
+        exit(EXIT_FAILURE);
+    }
+
+    buffer[n] = '\0';
+    write(STDERR_FILENO, buffer, (usize)n);
+    return;
+}
+
+static int
 record_callback(void *outputBuffer, void *inputBuffer,
                 unsigned int nFrames, double streamTime,
                 unsigned int status, void *userData) {
+    static int16 dummy_buffer[FRAMES_PER_BUFFER] = {0};
     int *fifo = userData;
     const int16 *in = inputBuffer;
+    (void) outputBuffer;
+    (void) streamTime;
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
         printf("INPUT_OVERFLOW\n");
@@ -36,17 +79,17 @@ record_callback(void *outputBuffer, void *inputBuffer,
         atomic_fetch_add(&overflow_count, 1);
     }
 
-    if (!in) {
-        int16 zero = 0;
-        write(*fifo, &buffer, sizeof(buffer));
-    } else {
+    if (!in)
+        write(*fifo, &dummy_buffer, sizeof(dummy_buffer));
+    else
         write(*fifo, in, nFrames*sizeof(*in));
-    }
 
     return 0;
 }
 
-void sigint_handler(int signum) {
+static void
+sigint_handler(int signum) {
+    (void) signum;
     running = 0;
 }
 
@@ -57,16 +100,17 @@ int main(void) {
     int fifo;
     int total = 0;
     int seconds = 0;
+    uint32 buffer_frames;
 
     /* signal(SIGINT, sigint_handler); */
 
     if ((fifo = open(FIFO_PATH, O_WRONLY)) < 0) {
-        fprintf(stderr, "Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
+        error("Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     if ((io = rtaudio_create(RTAUDIO_API_UNSPECIFIED)) == NULL) {
-        fprintf(stderr, "Error initializing RtAudio.\n");
+        error("Error initializing RtAudio.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -79,18 +123,18 @@ int main(void) {
     rt_stream_options.priority = 0;
     rt_stream_options.name[0] = '\0';
 
-    unsigned int buffer_frames = FRAMES_PER_BUFFER;
+    buffer_frames = FRAMES_PER_BUFFER;
     if (rtaudio_open_stream(io, NULL, &rt_stream_params,
                             RTAUDIO_FORMAT_SINT16,
                             SAMPLE_RATE, &buffer_frames,
                             record_callback, &fifo,
                             &rt_stream_options, NULL) != RTAUDIO_ERROR_NONE) {
-        fprintf(stderr, "Error opening RtAudio stream: %s\n", rtaudio_error(io));
+        error("Error opening RtAudio stream: %s\n", rtaudio_error(io));
         exit(EXIT_FAILURE);
     }
 
     if (rtaudio_start_stream(io) != RTAUDIO_ERROR_NONE) {
-        fprintf(stderr, "Error starting RtAudio stream: %s\n", rtaudio_error(io));
+        error("Error starting RtAudio stream: %s\n", rtaudio_error(io));
         exit(EXIT_FAILURE);
     }
 
@@ -98,11 +142,15 @@ int main(void) {
 
 #define SLEEP 2
     while (running) {
+        int count;
+        double average;
         sleep(SLEEP);
-        int count = atomic_exchange(&overflow_count, 0);
+
+        count = atomic_exchange(&overflow_count, 0);
         total += count;
         seconds += SLEEP;
-        double average = (double)total / seconds;
+
+        average = (double)total / seconds;
         printf("Input overflows in last %d seconds: %d | average: %.2f/s\n",
                SLEEP, count, average);
     }
