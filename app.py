@@ -4,7 +4,6 @@ import os
 import atexit
 import queue
 import numpy as np
-import sounddevice as sd
 import soundfile as sf
 import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
