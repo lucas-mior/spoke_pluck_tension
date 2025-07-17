@@ -43,7 +43,7 @@ audio_callback(const void *inputBuffer,
             write(*fifo, &zero, 1);
         }
     } else {
-        write(*fifo, in, framesPerBuffer*sizeof(int16));
+        write(*fifo, in, framesPerBuffer*sizeof(*in));
     }
 
     return paContinue;

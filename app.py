@@ -194,6 +194,7 @@ idle_sleep = 0.001
 while main_window.isVisible():
     events = poller.poll(poll_timeout)
     if events:
-        update_plot()
+        # update_plot()
+        raw = fifo_file.read(blocksize * 2)
     QtWidgets.QApplication.processEvents()
     time.sleep(idle_sleep)
