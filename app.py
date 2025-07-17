@@ -1,6 +1,6 @@
 import numpy as np
 import sounddevice as sd
-import pyqtgraph as pg
+import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
 from scipy.signal import butter, sosfilt, sosfreqz
 from queue import Queue
@@ -42,11 +42,11 @@ font-size: 22pt; color: orange; background-color: black;
 """)
 main_layout.addWidget(tension_label)
 
-window = pg.GraphicsLayoutWidget()
+window = pyqtgraph.GraphicsLayoutWidget()
 main_layout.addWidget(window)
 plot = window.addPlot(title="Frequency Spectrum (dB)")
 curve = plot.plot(pen='y')
-peak_text = pg.TextItem('', anchor=(0.5, 1.5), color='cyan')
+peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
 
 plot.setLabel('left', 'Magnitude (dB)')
