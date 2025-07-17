@@ -94,14 +94,16 @@ sigint_handler(int signum) {
     running = 0;
 }
 
-int main(void) {
-    rtaudio_stream_parameters_t rt_stream_params;
-    rtaudio_stream_options_t rt_stream_options;
-    rtaudio_t io = NULL;
+int
+main(void) {
     int fifo;
     int total = 0;
     int seconds = 0;
     uint32 buffer_frames;
+
+    rtaudio_stream_parameters_t rt_stream_params;
+    rtaudio_stream_options_t rt_stream_options;
+    rtaudio_t rt_handle = NULL;
 
     signal(SIGINT, sigint_handler);
 
@@ -110,12 +112,12 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    if ((io = rtaudio_create(RTAUDIO_API_UNSPECIFIED)) == NULL) {
+    if ((rt_handle = rtaudio_create(RTAUDIO_API_UNSPECIFIED)) == NULL) {
         error("Error initializing RtAudio.\n");
         exit(EXIT_FAILURE);
     }
 
-    rt_stream_params.device_id    = rtaudio_get_default_input_device(io);
+    rt_stream_params.device_id    = rtaudio_get_default_input_device(rt_handle);
     rt_stream_params.num_channels = 1;
     rt_stream_params.first_channel = 0;
 
@@ -125,17 +127,17 @@ int main(void) {
     rt_stream_options.name[0] = '\0';
 
     buffer_frames = FRAMES_PER_BUFFER;
-    if (rtaudio_open_stream(io, NULL, &rt_stream_params,
+    if (rtaudio_open_stream(rt_handle, NULL, &rt_stream_params,
                             RTAUDIO_FORMAT_SINT16,
                             SAMPLE_RATE, &buffer_frames,
                             record_callback, &fifo,
                             &rt_stream_options, NULL) != RTAUDIO_ERROR_NONE) {
-        error("Error opening RtAudio stream: %s\n", rtaudio_error(io));
+        error("Error opening RtAudio stream: %s\n", rtaudio_error(rt_handle));
         exit(EXIT_FAILURE);
     }
 
-    if (rtaudio_start_stream(io) != RTAUDIO_ERROR_NONE) {
-        error("Error starting RtAudio stream: %s\n", rtaudio_error(io));
+    if (rtaudio_start_stream(rt_handle) != RTAUDIO_ERROR_NONE) {
+        error("Error starting RtAudio stream: %s\n", rtaudio_error(rt_handle));
         exit(EXIT_FAILURE);
     }
 
@@ -157,9 +159,9 @@ int main(void) {
         }
     }
 
-    rtaudio_stop_stream(io);
-    rtaudio_close_stream(io);
-    rtaudio_destroy(io);
+    rtaudio_stop_stream(rt_handle);
+    rtaudio_close_stream(rt_handle);
+    rtaudio_destroy(rt_handle);
     close(fifo);
 
     return 0;
