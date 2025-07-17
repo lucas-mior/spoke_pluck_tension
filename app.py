@@ -114,8 +114,6 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
-    plot.setYRange(-100, max(-30, np.max(spectrum_db) + 10))
-
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(status)
