@@ -1,37 +1,52 @@
 import numpy as np
-import sys
+import matplotlib.pyplot as plt
 
 steel_density = 8000  # kg/m³
 diameter = 0.002  # meters
-length = 0.20  # meters
-spoke_area = np.pi*(diameter / 2) ** 2
-mu_steel_2mm = steel_density*spoke_area
+spoke_area = np.pi * (diameter / 2) ** 2
+mu_steel_2mm = steel_density * spoke_area
+length0=0.20
 
 
-def frequency(tension):
-    return np.sqrt(tension / mu_steel_2mm)/(2*length)
-
-
-def tension(frequency):
+def tension(frequency, length=length0):
     return 4*(length**2)*(frequency**2)*mu_steel_2mm
 
 
-if __name__ == '__main__':
-    Tmin = 500  # Newtons
-    Tmax = 2000  # Newtons
+def frequency(tension, length=length0):
+    return np.sqrt(tension / mu_steel_2mm) / (2 * length)
 
-    if len(sys.argv) >= 3:
-        Tmax = sys.argv[2]
-    elif len(sys.argv) == 2:
-        Tmin = sys.argv[1]
 
-    Fmin = round(frequency(Tmin))
-    Fmax = round(frequency(Tmax))
+if __name__ == "__main__":
+    tension_values = np.linspace(50, 3000, 500)
+    lengths = [0.15, 0.18, 0.20, 0.22, 0.25]
 
-    Tmin2 = round(tension(Fmin))
-    Tmax2 = round(tension(Fmax))
+    acceptable_tension_min = 900
+    acceptable_tension_max = 1200
 
-    print(f"Frequency(Tmin={Tmin} N) = Fmin={Fmin} Hz")
-    print(f"Frequency(Tmax={Tmax} N) = Fmax={Fmax} Hz")
-    print(f"Tension(Fmin={Fmin} Hz) = Tmin2={Tmin2} N")
-    print(f"Tension(Fmax={Fmax} Hz) = Tmax2={Tmax2} N")
+    plt.figure(figsize=(8, 5))
+
+    for length in lengths:
+        freq_values = frequency(tension_values, length)
+        line, = plt.plot(tension_values, freq_values, label=f'{length:.2f} m')
+
+        # Same color as line
+        color = line.get_color()
+
+        fmin = frequency(acceptable_tension_min, length)
+        fmax = frequency(acceptable_tension_max, length)
+
+        plt.fill_betweenx(
+            [fmin, fmax],
+            acceptable_tension_min,
+            acceptable_tension_max,
+            color=color,
+            alpha=0.2
+        )
+
+    plt.xlabel('Tension (N)')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Frequency vs. Tension for Different Spoke Lengths')
+    plt.legend(title='Spoke Length')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
