@@ -62,14 +62,14 @@ error(char *format, ...) {
 }
 
 static int
-record_callback(void *outputBuffer, void *inputBuffer,
-                unsigned int nFrames, double streamTime,
-                unsigned int status, void *userData) {
+record_callback(void *output_buffer, void *input_buffer,
+                unsigned int number_frames, double stream_time,
+                unsigned int status, void *user_data) {
     static int16 dummy_buffer[FRAMES_PER_BUFFER] = {0};
-    int *fifo = userData;
-    const int16 *in = inputBuffer;
-    (void) outputBuffer;
-    (void) streamTime;
+    int *fifo = user_data;
+    const int16 *in = input_buffer;
+    (void) output_buffer;
+    (void) stream_time;
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
         printf("INPUT_OVERFLOW\n");
@@ -83,7 +83,7 @@ record_callback(void *outputBuffer, void *inputBuffer,
     if (!in)
         write(*fifo, &dummy_buffer, sizeof(dummy_buffer));
     else
-        write(*fifo, in, nFrames*sizeof(*in));
+        write(*fifo, in, number_frames*sizeof(*in));
 
     return 0;
 }
