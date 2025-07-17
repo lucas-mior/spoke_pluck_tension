@@ -4,7 +4,7 @@ CFLAGS = -g -O3 -march=native -fPIC -flto -D_DEFAULT_SOURCE
 CFLAGS += -Wall -Wextra -Wno-unsafe-buffer-usage -Wno-unused-macros -Wno-unused-function
 CFLAGS += -Weverything
 
-LDFLAGS = -lm -lportaudio
+LDFLAGS = -lm -lportaudio -lrtaudio
 
 SRC = audio_to_fifo.c
 
