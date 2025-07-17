@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 typedef int16_t int16;
 
@@ -38,35 +39,42 @@ audio_callback(const void *inputBuffer,
 int main(void) {
     PaStream *stream;
     PaError pa_error;
+    int fifo;
 
-    int fifo = open(FIFO_PATH, O_WRONLY);
-    if (fifo < 0) {
+    if ((fifo = open(FIFO_PATH, O_WRONLY)) < 0) {
         fprintf(stderr, "Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
-    pa_error = Pa_Initialize();
-    if (pa_error != paNoError)
-        goto error;
+    if ((pa_error = Pa_Initialize()) != paNoError) {
+        fprintf(stderr, "Error initializing PortAudio: %s.\n",
+                        Pa_GetErrorText(pa_error));
+        exit(EXIT_FAILURE);
+    }
 
     pa_error = Pa_OpenDefaultStream(&stream,
-                               1,
-                               0,
-                               paInt16,
-                               SAMPLE_RATE,
-                               FRAMES_PER_BUFFER,
-                               audio_callback,
-                               &fifo);
-    if (pa_error != paNoError)
-        goto error;
+                                    1,
+                                    0,
+                                    paInt16,
+                                    SAMPLE_RATE,
+                                    FRAMES_PER_BUFFER,
+                                    audio_callback,
+                                    &fifo);
+    if (pa_error != paNoError) {
+        fprintf(stderr, "Error opening PortAudio stream: %s.\n",
+                        Pa_GetErrorText(pa_error));
+        exit(EXIT_FAILURE);
+    }
 
-    pa_error = Pa_StartStream(stream);
-    if (pa_error != paNoError)
-        goto error;
+    if ((pa_error = Pa_StartStream(stream)) != paNoError) {
+        fprintf(stderr, "Error opening PortAudio stream: %s.\n",
+                        Pa_GetErrorText(pa_error));
+        exit(EXIT_FAILURE);
+    }
 
     printf("Streaming audio to FIFO... Press Ctrl+C to stop.\n");
     while (1) {
-        sleep(1);  // Keep running
+        sleep(1);
     }
 
     Pa_StopStream(stream);
@@ -74,9 +82,5 @@ int main(void) {
     Pa_Terminate();
     close(fifo);
 
-    return 0;
-
-error:
-    fprintf(stderr, "PortAudio error: %s\n", Pa_GetErrorText(pa_error));
-    return 1;
+    exit(EXIT_SUCCESS);
 }
