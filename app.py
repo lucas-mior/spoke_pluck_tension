@@ -5,6 +5,7 @@ import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
 import scipy
 import queue
+import threading
 
 import spokes
 
@@ -103,9 +104,10 @@ def update_plot():
     global last_valid_time, last_update_time
     global spectrum_smoothed, spectrum_max
 
-    if data_queue.empty():
+    raw = fifo.read(blocksize*2)
+    if not raw:
         return
-    data = data_queue.get()
+    data = np.frombuffer(raw, dtype=np.int16)
 
     data = scipy.signal.sosfilt(bandpass, data)
     windowed = data*np.hanning(len(data))
@@ -158,42 +160,12 @@ def update_plot():
 
 
 frame_index = 0
-if not use_microphone:
-    audio_data, file_sample_rate = sf.read("output.wav", dtype='int16')
-    if file_sample_rate != sample_rate:
-        print(f"Sample rate mismatch: {file_sample_rate} != {sample_rate}")
-        exit(1)
-
-    if audio_data.ndim > 1:
-        audio_data = np.mean(audio_data, axis=1)
-
-    def stream_from_file():
-        global frame_index
-        if frame_index + blocksize >= len(audio_data):
-            timer.stop()
-            return
-        block = audio_data[frame_index:frame_index + blocksize]
-        frame_index += blocksize
-        data_queue.put(block)
-
-else:
-    def audio_callback(indata, frames, time, status):
-        if status:
-            print(status)
-        data_queue.put(indata[:, 0])
-        return
-
-    input_stream = sd.InputStream(callback=audio_callback,
-                                  channels=1,
-                                  samplerate=sample_rate,
-                                  blocksize=blocksize)
-    input_stream.start()
-    stream_from_file = lambda: None  # Dummy function
-
+fifo_path = "/tmp/audio_fifo"
+fifo = open(fifo_path, 'rb')
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
-timer.timeout.connect(stream_from_file)
+# timer.timeout.connect(stream_from_file)
 timer.start(int(1000*blocksize / sample_rate))
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
