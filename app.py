@@ -113,6 +113,7 @@ def update_plot():
     raw = fifo_file.read(blocksize*2)
     if not raw:
         return
+    return
     data = np.frombuffer(raw, dtype=np.int16)
 
     data = scipy.signal.sosfilt(bandpass, data)
@@ -185,12 +186,12 @@ fifo_file = os.fdopen(fifo_fd, 'rb')
 atexit.register(fifo_file.close)
 atexit.register(fifo_proc.terminate)
 
-def handle_fifo_event():
-    if fifo_file.peek(1):  # check if there's something to read
-        update_plot()
+# def handle_fifo_event():
+#     # if fifo_file.peek(1):  # check if there's something to read
+#         update_plot()
 
 notifier = QtCore.QSocketNotifier(fifo_fd, QtCore.QSocketNotifier.Type.Read)
-notifier.activated.connect(handle_fifo_event)
+notifier.activated.connect(update_plot)
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
