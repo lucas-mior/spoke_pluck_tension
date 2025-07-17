@@ -76,7 +76,7 @@ xticks = [
         (np.log10(2000), '2000')]
 ]
 plot.getAxis('bottom').setTicks(xticks)
-plot.setYRange(-100, 0)
+plot.setYRange(-50, 0)
 
 last_valid_frequency = None
 last_valid_tension = None
@@ -124,9 +124,9 @@ def update_plot():
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = 20*np.log10(spectrum_smoothed)
-    if max(spectrum_db) + 2 > spectrum_max:
-        spectrum_max = max(spectrum_db) + 2
-    plot.setYRange(-100, spectrum_max)
+    if max(spectrum_db) > spectrum_max:
+        spectrum_max = max(spectrum_db)
+    plot.setYRange(-80, spectrum_max)
 
     curve.setData(frequencies, spectrum_db)
 
