@@ -7,6 +7,9 @@
 #include <signal.h>
 #include <time.h>
 #include <poll.h>
+#include <stdint.h>
+
+typedef int16_t int16;
 
 #define FIFO_PATH "/tmp/audio_fifo"
 #define BUFFER_SIZE 4096
@@ -19,11 +22,11 @@ void sigint_handler(int signum) {
 
 int main(void) {
     int fifo;
-    char buffer[BUFFER_SIZE];
+    int16 buffer[BUFFER_SIZE];
     ssize_t bytes_read;
     ssize_t total = 0;
 
-    signal(SIGINT, sigint_handler);
+    /* signal(SIGINT, sigint_handler); */
 
     if ((fifo = open(FIFO_PATH, O_RDONLY | O_NONBLOCK)) < 0) {
         fprintf(stderr, "Error opening %s: %s\n", FIFO_PATH, strerror(errno));
@@ -39,9 +42,8 @@ int main(void) {
 
     while (running) {
         total = 0;
-        time_t start = time(NULL);
-        while (time(NULL) == start && running) {
-            int ret = poll(&pfd, 1, 100); // 100 ms timeout
+        while (true) {
+            int ret = poll(&pfd, 1, 1000); // 100 ms timeout
             if (ret > 0 && (pfd.revents & POLLIN)) {
                 bytes_read = read(fifo, buffer, sizeof(buffer));
                 if (bytes_read > 0) {
