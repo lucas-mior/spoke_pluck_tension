@@ -23,10 +23,9 @@ bandpass = butter(order,
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
-qt_application = QtWidgets.QApplication([])
-
 spectrum_smoothed = np.zeros(len(frequencies))
 
+qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
