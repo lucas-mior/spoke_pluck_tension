@@ -11,7 +11,7 @@ SRC = audio_to_fifo.c
 
 all: audio_to_fifo
 
-libzerdax.so: $(SRC) Makefile
+audio_to_fifo: $(SRC) Makefile
 	-ctags --kinds-C=+l *.h *.c
 	-vtags.sed tags > .tags.vim
 	$(CC) $(CFLAGS) -o audio_to_fifo $(LDFLAGS) $(SRC)
