@@ -129,12 +129,13 @@ def update_plot():
     elif abs(fundamental - last_valid_frequency) > min_freq_change:
         freq_diff_ok = True
 
-    if frequency_min < fundamental < frequency_max and update_allowed and freq_diff_ok:
-        tension = spokes.tension(fundamental)
-        last_valid_frequency = fundamental
-        last_valid_tension = tension
-        last_valid_time = now
-        last_update_time = now
+    if update_allowed and freq_diff_ok:
+        if frequency_min < fundamental < frequency_max:
+            tension = spokes.tension(fundamental)
+            last_valid_frequency = fundamental
+            last_valid_tension = tension
+            last_valid_time = now
+            last_update_time = now
 
     if last_valid_time.msecsTo(now) > hold_duration:
         last_valid_frequency = None
