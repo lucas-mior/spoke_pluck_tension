@@ -8,9 +8,9 @@ import queue
 
 import spokes
 
-use_microphone = True
+use_microphone = False
 sample_rate = 44100
-blocksize = 1024
+blocksize = 4096
 alpha = 0.5
 
 frequency_min = 50
@@ -166,9 +166,6 @@ if not use_microphone:
     if audio_data.ndim > 1:
         audio_data = np.mean(audio_data, axis=1)
 
-    output_stream = sd.OutputStream(samplerate=sample_rate, channels=1, blocksize=blocksize)
-    output_stream.start()
-
     def stream_from_file():
         global frame_index
         if frame_index + blocksize >= len(audio_data):
@@ -177,7 +174,6 @@ if not use_microphone:
         block = audio_data[frame_index:frame_index + blocksize]
         frame_index += blocksize
         data_queue.put(block)
-        output_stream.write(block.astype(np.float32) / np.iinfo(np.int16).max)
 
 else:
     def audio_callback(indata, frames, time, status):
@@ -197,7 +193,7 @@ else:
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
-timer.start(33)
+timer.start(int(1000*blocksize / sample_rate))
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
