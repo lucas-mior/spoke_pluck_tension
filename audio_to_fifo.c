@@ -14,11 +14,12 @@ typedef int16_t int16;
 #define FRAMES_PER_BUFFER 4096
 #define FIFO_PATH "/tmp/audio_fifo"
 
-static int audio_callback(const void *inputBuffer, void *outputBuffer,
-                          unsigned long framesPerBuffer,
-                          const PaStreamCallbackTimeInfo* timeInfo,
-                          PaStreamCallbackFlags statusFlags,
-                          void *userData) {
+static int
+audio_callback(const void *inputBuffer, void *outputBuffer,
+               unsigned long framesPerBuffer,
+               const PaStreamCallbackTimeInfo* timeInfo,
+               PaStreamCallbackFlags statusFlags,
+               void *userData) {
     int *fifo = userData;
     const int16 *in = (const int16 *)inputBuffer;
 
