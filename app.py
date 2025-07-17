@@ -45,14 +45,27 @@ main_layout.addWidget(tension_label)
 window = pyqtgraph.GraphicsLayoutWidget()
 main_layout.addWidget(window)
 plot = window.addPlot(title="Frequency Spectrum (dB)")
+plot.setLogMode(x=True, y=False)
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
 
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
-plot.setXRange(0, 2000)
-plot.setYRange(-100, 20)
+plot.setXRange(1, 3.3)
+xticks = [
+    [
+     (np.log10(10), '10'),
+     (np.log10(20), '20'),
+     (np.log10(50), '50'),
+     (np.log10(100), '100'),
+     (np.log10(200), '200'),
+     (np.log10(500), '500'),
+     (np.log10(1000), '1000'),
+     (np.log10(2000), '2000')]
+]
+plot.getAxis('bottom').setTicks(xticks)
+plot.setYRange(-100, 0)
 
 last_valid_frequency = None
 last_valid_tension = None
@@ -92,7 +105,7 @@ def update_plot():
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
-    spectrum_db = 20 * np.log10(spectrum_smoothed)
+    spectrum_db = 20*np.log10(spectrum_smoothed)
 
     curve.setData(frequencies, spectrum_db)
 
