@@ -22,8 +22,8 @@ alpha = 0.5
 # Spoke tension range: [500N, 2000N]
 # Spoke frequency range: [353Hz, 705Hz]
 
-frequency_min = spokes.frequency(500)
-frequency_max = spokes.frequency(2000)
+frequency_min = spokes.frequency(100)
+frequency_max = spokes.frequency(3000)
 f0 = frequency_min/2
 f1 = frequency_max*4
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
@@ -59,7 +59,6 @@ main_layout.addWidget(tension_label)
 window = pyqtgraph.GraphicsLayoutWidget()
 main_layout.addWidget(window)
 plot = window.addPlot(title="Frequency Spectrum")
-plot.setLogMode(x=True, y=False)
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
@@ -67,14 +66,15 @@ plot.addItem(peak_text)
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
 
+plot.setLogMode(x=True, y=False)
 x0 = np.log10(f0)
 xn = np.log10(f1)
-xticks = [[
-        (x0, str(round(10**x0))),
-        (xn, str(round(10**xn))),
-]]
+# xticks = [[
+#         (x0, str(round(10**x0))),
+#         (xn, str(round(10**xn))),
+# ]]
 plot.setXRange(x0, xn)
-plot.getAxis('bottom').setTicks(xticks)
+# plot.getAxis('bottom').setTicks(xticks)
 plot.setYRange(-50, 0)
 
 last_valid_frequency = None
