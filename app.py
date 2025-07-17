@@ -8,8 +8,7 @@ import queue
 
 import spokes
 
-# ==== CONFIG ====
-use_microphone = True  # Set to False to use "output.wav"
+use_microphone = True
 sample_rate = 44100
 blocksize = 1024
 alpha = 0.5
@@ -28,6 +27,7 @@ bandpass = scipy.signal.butter(order,
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = queue.Queue()
 spectrum_smoothed = np.zeros(len(frequencies))
+spectrum_max = 0
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -35,11 +35,15 @@ main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 
 frequency_label = QtWidgets.QLabel("Frequency: -- Hz")
-frequency_label.setStyleSheet("font-size: 22pt; color: cyan; background-color: black;")
+frequency_label.setStyleSheet("""
+font-size: 22pt; color: cyan; background-color: black;
+""")
 main_layout.addWidget(frequency_label)
 
 tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
-tension_label.setStyleSheet("font-size: 22pt; color: orange; background-color: black;")
+tension_label.setStyleSheet("""
+font-size: 22pt; color: orange; background-color: black;
+""")
 main_layout.addWidget(tension_label)
 
 window = pyqtgraph.GraphicsLayoutWidget()
@@ -72,7 +76,7 @@ last_valid_tension = None
 last_valid_time = QtCore.QTime.currentTime()
 last_update_time = QtCore.QTime.currentTime()
 
-hold_duration = 1.0
+hold_duration = 1000
 min_update_interval = 300
 min_freq_change = 5.0
 
@@ -82,16 +86,18 @@ max_lag = int(sample_rate / frequency_min)
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
+
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[len(correlation) // 2:]
     correlation[:min_lag] = 0
+
     peak_idx = np.argmax(correlation[min_lag:max_lag]) + min_lag
     if peak_idx == 0:
         return 0.0
+
     return sample_rate / peak_idx
 
 
-spectrum_max = 0
 def update_plot():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
@@ -119,7 +125,10 @@ def update_plot():
     fundamental = detect_fundamental_autocorrelation(data, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
-    freq_diff_ok = (last_valid_frequency is None or abs(fundamental - last_valid_frequency) > min_freq_change)
+    if last_valid_frequency is None:
+        freq_diff_ok = True
+    elif abs(fundamental - last_valid_frequency) > min_freq_change:
+        freq_diff_ok = True
 
     if frequency_min < fundamental < frequency_max and update_allowed and freq_diff_ok:
         tension = spokes.tension(fundamental)
@@ -128,8 +137,7 @@ def update_plot():
         last_valid_time = now
         last_update_time = now
 
-    elapsed = last_valid_time.msecsTo(now) / 1000
-    if elapsed > hold_duration:
+    if last_valid_time.msecsTo(now) > hold_duration:
         last_valid_frequency = None
         last_valid_tension = None
 
@@ -138,9 +146,9 @@ def update_plot():
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
         y_val = spectrum_db[idx] + 5
         peak_text.setPos(np.log10(last_valid_frequency), y_val)
-        peak_text.setText(f"{last_valid_frequency:.1f} Hz")
-        frequency_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
-        tension_label.setText(f"Tension: {last_valid_tension:.1f} N  ({kgf:.1f} kgf)")
+        peak_text.setText(f"{last_valid_frequency:.0f} Hz")
+        frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
+        tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
     else:
         frequency_label.setText("Frequency: -- Hz")
         tension_label.setText("Tension: -- N  (-- kgf)")
