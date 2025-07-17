@@ -108,7 +108,7 @@ def update_plot():
     global spectrum_smoothed, spectrum_max
 
     try:
-        raw = fifo_file.read(blocksize * 2)
+        raw = fifo_file.read(blocksize*2)
         if not raw:
             return
     except BlockingIOError:
@@ -117,11 +117,11 @@ def update_plot():
 
     data = np.frombuffer(raw, dtype=np.int16)
     data = scipy.signal.sosfilt(bandpass, data)
-    windowed = data * np.hanning(len(data))
+    windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
-    spectrum_db = 20 * np.log10(spectrum_smoothed)
+    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
+    spectrum_db = 20*np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
     plot.setYRange(-100, spectrum_max)
@@ -193,6 +193,6 @@ while main_window.isVisible():
     events = poller.poll(poll_timeout)
     if events:
         update_plot()
-        # raw = fifo_file.read(blocksize * 2)
+        # raw = fifo_file.read(blocksize*2)
     QtWidgets.QApplication.processEvents()
     # time.sleep(idle_sleep)
