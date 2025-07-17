@@ -128,10 +128,15 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
+    return
+
+
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(status)
     data_queue.put(indata[:, 0])
+    return
+
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
