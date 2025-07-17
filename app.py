@@ -9,13 +9,16 @@ import spokes
 sample_rate = 44100
 blocksize = 4096
 
-f_low = 50  #spokes.frequency(500)
-f_high = 1500  #spokes.frequency(2000)
-print(f"{f_low=:.1f} {f_high=:.1f}")
+frequency_min = 50  #spokes.frequency(500)
+frequency_max = 1000  #spokes.frequency(2000)
+print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
 
-band = [f_low, f_high]
 order = 5
-sos = butter(order, band, btype='bandpass', fs=sample_rate, output='sos')
+bandpass = butter(order,
+                  [frequency_min, frequency_max],
+                  btype='bandpass',
+                  fs=sample_rate,
+                  output='sos')
 
 freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
@@ -36,9 +39,9 @@ tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
 tension_label.setStyleSheet("font-size: 18pt; color: orange; background-color: black;")
 main_layout.addWidget(tension_label)
 
-win = pg.GraphicsLayoutWidget()
-main_layout.addWidget(win)
-plot = win.addPlot(title="Frequency Spectrum (dB)")
+window = pg.GraphicsLayoutWidget()
+main_layout.addWidget(window)
+plot = window.addPlot(title="Frequency Spectrum (dB)")
 curve = plot.plot(pen='y')
 peak_text = pg.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
@@ -63,8 +66,8 @@ def detect_fundamental_autocorr(signal, fs):
     corr = np.correlate(signal, signal, mode='full')
     corr = corr[len(corr) // 2:]
 
-    min_lag = int(fs / f_high)
-    max_lag = int(fs / f_low)
+    min_lag = int(fs / frequency_max)
+    max_lag = int(fs / frequency_min)
     corr[:min_lag] = 0
 
     peak_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
@@ -82,7 +85,7 @@ def update_plot():
         data_queue.get()
     data = data_queue.get()
 
-    data = sosfilt(sos, data)
+    data = sosfilt(bandpass, data)
     windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
@@ -97,7 +100,7 @@ def update_plot():
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (last_valid_frequency is None or abs(fundamental - last_valid_frequency) > min_freq_change)
 
-    if f_low < fundamental < f_high and update_allowed and freq_diff_ok:
+    if frequency_min < fundamental < frequency_max and update_allowed and freq_diff_ok:
         tension = spokes.tension(fundamental)
         last_valid_frequency = fundamental
         last_valid_tension = tension
