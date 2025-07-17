@@ -185,7 +185,6 @@ else:
     stream_from_file = lambda: None  # Dummy function
 
 
-# === RUN ===
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
