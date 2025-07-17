@@ -10,6 +10,8 @@ import queue
 import subprocess
 import atexit
 import os
+import fcntl
+import sys
 
 import spokes
 
@@ -108,7 +110,7 @@ def update_plot():
     global last_valid_time, last_update_time
     global spectrum_smoothed, spectrum_max
 
-    raw = fifo.read(blocksize*2)
+    raw = fifo_file.read(blocksize*2)
     if not raw:
         return
     data = np.frombuffer(raw, dtype=np.int16)
@@ -178,10 +180,17 @@ fifo_proc = subprocess.Popen(["./audio_to_fifo"])
 atexit.register(fifo_proc.terminate)
 fifo = open(fifo_path, 'rb')
 
-timer = QtCore.QTimer()
-timer.timeout.connect(update_plot)
-# timer.timeout.connect(stream_from_file)
-timer.start(int(1000*blocksize / sample_rate))
+fifo_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+fifo_file = os.fdopen(fifo_fd, 'rb')
+atexit.register(fifo_file.close)
+atexit.register(fifo_proc.terminate)
+
+def handle_fifo_event():
+    if fifo_file.peek(1):  # check if there's something to read
+        update_plot()
+
+notifier = QtCore.QSocketNotifier(fifo_fd, QtCore.QSocketNotifier.Type.Read)
+notifier.activated.connect(handle_fifo_event)
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
