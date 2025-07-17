@@ -10,7 +10,7 @@ import spokes
 
 use_microphone = True
 sample_rate = 44100
-blocksize = 4096
+blocksize = 1024
 alpha = 0.5
 
 frequency_min = 50
