@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <portaudio.h>
 #include <stdint.h>
+
 typedef int16_t int16;
 
 #define SAMPLE_RATE 44100
