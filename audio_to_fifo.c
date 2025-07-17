@@ -151,8 +151,10 @@ int main(void) {
         seconds += SLEEP;
 
         average = (double)total / seconds;
-        printf("Input overflows in last %d seconds: %d | average: %.2f/s\n",
-               SLEEP, count, average);
+        if ((average > 0.1) || (count > 0)) {
+            printf("Input overflows in last %d seconds: %d | average: %.2f/s\n",
+                   SLEEP, count, average);
+        }
     }
 
     rtaudio_stop_stream(io);
