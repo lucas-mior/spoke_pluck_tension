@@ -19,13 +19,15 @@ sample_rate = 44100
 blocksize = 4096
 alpha = 0.5
 
-frequency_min = 30
-frequency_max = 1500
+frequency_min = 60
+frequency_max = 400
+f0 = frequency_min/2
+f1 = frequency_max*4
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
 
 order = 5
 bandpass = scipy.signal.butter(order,
-                               [frequency_min, frequency_max],
+                               [f0, f1],
                                btype='bandpass',
                                fs=sample_rate,
                                output='sos')
@@ -85,8 +87,8 @@ hold_duration = 1000
 min_update_interval = 300
 min_freq_change = 5.0
 
-min_lag = int(sample_rate / frequency_max)
-max_lag = int(sample_rate / frequency_min)
+max_lag = int(sample_rate / f0)
+min_lag = int(sample_rate / f1)
 
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
