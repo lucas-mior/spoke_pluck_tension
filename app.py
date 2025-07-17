@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
+import os
+import atexit
+import queue
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
 import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
 import scipy
-import queue
 import subprocess
-import atexit
-import os
-import fcntl
-import sys
+import select
+import time
 
 import spokes
 
@@ -32,7 +32,6 @@ bandpass = scipy.signal.butter(order,
                                output='sos')
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-data_queue = queue.Queue()
 spectrum_smoothed = np.zeros(len(frequencies))
 spectrum_max = 0
 
@@ -66,14 +65,14 @@ plot.setLabel('bottom', 'Frequency (Hz)')
 plot.setXRange(1, 3.3)
 xticks = [
     [
-     (np.log10(10), '10'),
-     (np.log10(20), '20'),
-     (np.log10(50), '50'),
-     (np.log10(100), '100'),
-     (np.log10(200), '200'),
-     (np.log10(500), '500'),
-     (np.log10(1000), '1000'),
-     (np.log10(2000), '2000')]
+        (np.log10(10), '10'),
+        (np.log10(20), '20'),
+        (np.log10(50), '50'),
+        (np.log10(100), '100'),
+        (np.log10(200), '200'),
+        (np.log10(500), '500'),
+        (np.log10(1000), '1000'),
+        (np.log10(2000), '2000')]
 ]
 plot.getAxis('bottom').setTicks(xticks)
 plot.setYRange(-100, 0)
@@ -93,7 +92,6 @@ max_lag = int(sample_rate / frequency_min)
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
-
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[len(correlation) // 2:]
     correlation[:min_lag] = 0
@@ -110,18 +108,22 @@ def update_plot():
     global last_valid_time, last_update_time
     global spectrum_smoothed, spectrum_max
 
-    raw = fifo_file.read(blocksize*2)
-    if not raw:
+    try:
+        raw = fifo_file.read(blocksize * 2)
+        if not raw:
+            return
+    except BlockingIOError:
+        print("BlockingIO")
         return
     return
-    data = np.frombuffer(raw, dtype=np.int16)
 
+    data = np.frombuffer(raw, dtype=np.int16)
     data = scipy.signal.sosfilt(bandpass, data)
-    windowed = data*np.hanning(len(data))
+    windowed = data * np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
-    spectrum_db = 20*np.log10(spectrum_smoothed)
+    spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
+    spectrum_db = 20 * np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
     plot.setYRange(-100, spectrum_max)
@@ -132,11 +134,10 @@ def update_plot():
     fundamental = detect_fundamental_autocorrelation(data, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
-    freq_diff_ok = False
-    if last_valid_frequency is None:
-        freq_diff_ok = True
-    elif abs(fundamental - last_valid_frequency) > min_freq_change:
-        freq_diff_ok = True
+    freq_diff_ok = (
+        last_valid_frequency is None
+        or abs(fundamental - last_valid_frequency) > min_freq_change
+    )
 
     if update_allowed and freq_diff_ok:
         if frequency_min < fundamental < frequency_max:
@@ -163,12 +164,8 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
-    return
 
-
-frame_index = 0
 fifo_path = "/tmp/audio_fifo"
-
 if not os.path.exists(fifo_path):
     os.mkfifo(fifo_path)
 
@@ -178,22 +175,25 @@ if make_result.returncode != 0:
     exit(1)
 
 fifo_proc = subprocess.Popen(["./audio_to_fifo"])
-atexit.register(fifo_proc.terminate)
-fifo = open(fifo_path, 'rb')
-
 fifo_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
 fifo_file = os.fdopen(fifo_fd, 'rb')
+
 atexit.register(fifo_file.close)
 atexit.register(fifo_proc.terminate)
-
-# def handle_fifo_event():
-#     # if fifo_file.peek(1):  # check if there's something to read
-#         update_plot()
-
-notifier = QtCore.QSocketNotifier(fifo_fd, QtCore.QSocketNotifier.Type.Read)
-notifier.activated.connect(update_plot)
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
 main_window.show()
-qt_application.exec()
+
+poller = select.poll()
+poller.register(fifo_fd, select.POLLIN)
+
+poll_timeout = 50
+idle_sleep = 0.001
+
+while main_window.isVisible():
+    events = poller.poll(poll_timeout)
+    if events:
+        update_plot()
+    QtWidgets.QApplication.processEvents()
+    time.sleep(idle_sleep)
