@@ -8,6 +8,8 @@ import queue
 
 import spokes
 
+# ==== CONFIG ====
+use_microphone = True  # Set to False to use "output.wav"
 sample_rate = 44100
 blocksize = 4096
 alpha = 0.8
@@ -33,15 +35,11 @@ main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 
 frequency_label = QtWidgets.QLabel("Frequency: -- Hz")
-frequency_label.setStyleSheet("""
-font-size: 22pt; color: cyan; background-color: black;
-""")
+frequency_label.setStyleSheet("font-size: 22pt; color: cyan; background-color: black;")
 main_layout.addWidget(frequency_label)
 
 tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
-tension_label.setStyleSheet("""
-font-size: 22pt; color: orange; background-color: black;
-""")
+tension_label.setStyleSheet("font-size: 22pt; color: orange; background-color: black;")
 main_layout.addWidget(tension_label)
 
 window = pyqtgraph.GraphicsLayoutWidget()
@@ -73,9 +71,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[len(correlation) // 2:]
-
     correlation[:min_lag] = 0
-
     peak_idx = np.argmax(correlation[min_lag:max_lag]) + min_lag
     if peak_idx == 0:
         return 0.0
@@ -92,11 +88,11 @@ def update_plot():
     data = data_queue.get()
 
     data = scipy.signal.sosfilt(bandpass, data)
-    windowed = data*np.hanning(len(data))
+    windowed = data * np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
-    spectrum_db = 20*np.log10(spectrum_smoothed)
+    spectrum_smoothed = (1 - alpha) * spectrum_smoothed + alpha * spectrum
+    spectrum_db = 20 * np.log10(spectrum_smoothed)
 
     curve.setData(frequencies, spectrum_db)
 
@@ -131,38 +127,55 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
-    return
-
-audio_data, file_sample_rate = sf.read("output.wav", dtype='int16')
-if file_sample_rate != sample_rate:
-    print(f"Sample rate mismatch: {file_sample_rate} != {sample_rate}")
-    exit(1)
-
-if audio_data.ndim > 1:
-    audio_data = np.mean(audio_data, axis=1)
 
 frame_index = 0
-output_stream = sd.OutputStream(samplerate=sample_rate, channels=1, blocksize=blocksize)
-output_stream.start()
+if not use_microphone:
+    audio_data, file_sample_rate = sf.read("output.wav", dtype='int16')
+    if file_sample_rate != sample_rate:
+        print(f"Sample rate mismatch: {file_sample_rate} != {sample_rate}")
+        exit(1)
 
-def stream_from_file():
-    global frame_index
-    if frame_index + blocksize >= len(audio_data):
-        timer.stop()
-        return
-    block = audio_data[frame_index:frame_index + blocksize]
-    frame_index += blocksize
-    data_queue.put(block)
-    data_queue.put(block)
-    output_stream.write(block.astype(np.float32) / np.iinfo(np.int16).max)
+    if audio_data.ndim > 1:
+        audio_data = np.mean(audio_data, axis=1)
+
+    output_stream = sd.OutputStream(samplerate=sample_rate, channels=1, blocksize=blocksize)
+    output_stream.start()
+
+    def stream_from_file():
+        global frame_index
+        if frame_index + blocksize >= len(audio_data):
+            timer.stop()
+            return
+        block = audio_data[frame_index:frame_index + blocksize]
+        frame_index += blocksize
+        data_queue.put(block)
+        output_stream.write(block.astype(np.float32) / np.iinfo(np.int16).max)
+
+else:
+    def audio_callback(indata, frames, time, status):
+        if status:
+            print(status)
+        if indata.ndim > 1:
+            block = np.mean(indata, axis=1)
+        else:
+            block = indata[:, 0]
+        data_queue.put(block.copy())
+
+    input_stream = sd.InputStream(callback=audio_callback,
+                                  channels=1,
+                                  samplerate=sample_rate,
+                                  blocksize=blocksize)
+    input_stream.start()
+    stream_from_file = lambda: None  # Dummy function
 
 
+# === RUN ===
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
-timer.start(int(1000 * blocksize / sample_rate))  # Real-time interval
+timer.start(int(1000 * blocksize / sample_rate))
 
-main_window.setWindowTitle("Spoke Tension Analyzer (File Mode)")
+main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
 main_window.show()
 qt_application.exec()
