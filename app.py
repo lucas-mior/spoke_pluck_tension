@@ -30,9 +30,9 @@ main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 
-freq_label = QtWidgets.QLabel("Frequency: -- Hz")
-freq_label.setStyleSheet("font-size: 24pt; color: cyan; background-color: black;")
-main_layout.addWidget(freq_label)
+frequency_label = QtWidgets.QLabel("Frequency: -- Hz")
+frequency_label.setStyleSheet("font-size: 24pt; color: cyan; background-color: black;")
+main_layout.addWidget(frequency_label)
 
 tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
 tension_label.setStyleSheet("font-size: 18pt; color: orange; background-color: black;")
@@ -117,10 +117,10 @@ def update_plot():
         y_val = spectrum_db[idx] + 5
         peak_text.setPos(last_valid_frequency, y_val)
         peak_text.setText(f"{last_valid_frequency:.1f} Hz")
-        freq_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
+        frequency_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.1f} N  ({kgf:.1f} kgf)")
     else:
-        freq_label.setText("Frequency: -- Hz")
+        frequency_label.setText("Frequency: -- Hz")
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
