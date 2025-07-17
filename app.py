@@ -13,7 +13,7 @@ sample_rate = 44100
 blocksize = 4096
 alpha = 0.5
 
-frequency_min = 50
+frequency_min = 30
 frequency_max = 1500
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
 
