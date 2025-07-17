@@ -175,7 +175,7 @@ timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
 timer.start(int(1000 * blocksize / sample_rate))
 
-main_window.setWindowTitle("Spoke Tension Analyzer (Mic Mode)" if use_microphone else "Spoke Tension Analyzer (File Mode)")
+main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
 main_window.show()
 qt_application.exec()
