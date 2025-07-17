@@ -63,7 +63,7 @@ error(char *format, ...) {
 
 static int
 record_callback(void *outputBuffer, void *inputBuffer,
-                unsigned int nFrames, double streamTime,
+                unsigned int nframes, double streamTime,
                 unsigned int status, void *userData) {
     static int16 dummy_buffer[FRAMES_PER_BUFFER] = {0};
     int *fifo = userData;
@@ -83,7 +83,7 @@ record_callback(void *outputBuffer, void *inputBuffer,
     if (!in)
         write(*fifo, &dummy_buffer, sizeof(dummy_buffer));
     else
-        write(*fifo, in, nFrames*sizeof(*in));
+        write(*fifo, in, nframes*sizeof(*in));
 
     return 0;
 }
