@@ -115,7 +115,6 @@ def update_plot():
     except BlockingIOError:
         print("BlockingIO")
         return
-    return
 
     data = np.frombuffer(raw, dtype=np.int16)
     data = scipy.signal.sosfilt(bandpass, data)
@@ -188,13 +187,13 @@ main_window.show()
 poller = select.poll()
 poller.register(fifo_fd, select.POLLIN)
 
-poll_timeout = 50
+poll_timeout = 1000
 idle_sleep = 0.001
 
 while main_window.isVisible():
     events = poller.poll(poll_timeout)
     if events:
-        # update_plot()
-        raw = fifo_file.read(blocksize * 2)
+        update_plot()
+        # raw = fifo_file.read(blocksize * 2)
     QtWidgets.QApplication.processEvents()
-    time.sleep(idle_sleep)
+    # time.sleep(idle_sleep)
