@@ -174,11 +174,8 @@ else:
     def audio_callback(indata, frames, time, status):
         if status:
             print(status)
-        if indata.ndim > 1:
-            block = np.mean(indata, axis=1)
-        else:
-            block = indata[:, 0]
-        data_queue.put(block.copy())
+        data_queue.put(indata[:, 0])
+        return
 
     input_stream = sd.InputStream(callback=audio_callback,
                                   channels=1,
