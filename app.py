@@ -67,14 +67,14 @@ min_lag = int(sample_rate / frequency_max)
 max_lag = int(sample_rate / frequency_min)
 
 
-def detect_fundamental_autocorr(signal, sample_rate):
+def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
-    corr = np.correlate(signal, signal, mode='full')
-    corr = corr[len(corr) // 2:]
+    correlation = np.correlate(signal, signal, mode='full')
+    correlation = correlation[len(correlation) // 2:]
 
-    corr[:min_lag] = 0
+    correlation[:min_lag] = 0
 
-    peak_idx = np.argmax(corr[min_lag:max_lag]) + min_lag
+    peak_idx = np.argmax(correlation[min_lag:max_lag]) + min_lag
     if peak_idx == 0:
         return 0.0
     return sample_rate / peak_idx
@@ -99,7 +99,7 @@ def update_plot():
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorr(data, sample_rate)
+    fundamental = detect_fundamental_autocorrelation(data, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (last_valid_frequency is None or abs(fundamental - last_valid_frequency) > min_freq_change)
