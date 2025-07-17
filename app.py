@@ -20,11 +20,11 @@ bandpass = butter(order,
                   fs=sample_rate,
                   output='sos')
 
-freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
-app = QtWidgets.QApplication([])
+qt_application = QtWidgets.QApplication([])
 
-spectrum_smoothed = np.zeros(len(freqs))
+spectrum_smoothed = np.zeros(len(frequencies))
 alpha = 0.2
 
 main_window = QtWidgets.QWidget()
@@ -92,7 +92,7 @@ def update_plot():
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = 20*np.log10(spectrum_smoothed)
 
-    curve.setData(freqs, spectrum_db)
+    curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
     fundamental = detect_fundamental_autocorr(data, sample_rate)
@@ -114,7 +114,7 @@ def update_plot():
 
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
-        idx = np.argmin(np.abs(freqs - last_valid_frequency))
+        idx = np.argmin(np.abs(frequencies - last_valid_frequency))
         y_val = spectrum_db[idx] + 5
         peak_text.setPos(last_valid_frequency, y_val)
         peak_text.setText(f"{last_valid_frequency:.1f} Hz")
@@ -141,4 +141,4 @@ with sd.InputStream(callback=audio_callback,
     main_window.setWindowTitle("Spoke Tension Analyzer")
     main_window.resize(800, 600)
     main_window.show()
-    app.exec()
+    qt_application.exec()
