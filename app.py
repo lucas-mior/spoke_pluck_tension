@@ -167,6 +167,11 @@ fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
     os.mkfifo(fifo_path)
 
+make_result = subprocess.run(["make"])
+if make_result.returncode != 0:
+    print("Build failed. Exiting.")
+    exit(1)
+
 fifo_proc = subprocess.Popen(["./audio_to_fifo"])
 atexit.register(fifo_proc.terminate)
 fifo = open(fifo_path, 'rb')
