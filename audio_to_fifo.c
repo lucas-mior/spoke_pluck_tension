@@ -56,6 +56,8 @@ int main(void) {
     PaStream *stream;
     PaError pa_error;
     int fifo;
+    int total = 0;
+    int seconds = 0;
 
     signal(SIGINT, sigint_handler);
 
@@ -91,7 +93,10 @@ int main(void) {
     while (running) {
         sleep(1);
         int count = atomic_exchange(&overflow_count, 0);
-        printf("Input overflow count in last second: %d\n", count);
+        total += count;
+        seconds += 1;
+        double average = (double) total / seconds;
+        printf("Input overflow count in last second: %d | average: %.2f/s\n", count, average);
     }
 
     Pa_StopStream(stream);
