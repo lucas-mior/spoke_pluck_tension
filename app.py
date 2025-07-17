@@ -19,8 +19,11 @@ sample_rate = 44100
 blocksize = 4096
 alpha = 0.5
 
-frequency_min = 60
-frequency_max = 400
+# Spoke tension range: [500N, 2000N]
+# Spoke frequency range: [353Hz, 705Hz]
+
+frequency_min = spokes.frequency(500)
+frequency_max = spokes.frequency(2000)
 f0 = frequency_min/2
 f1 = frequency_max*4
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
@@ -63,18 +66,14 @@ plot.addItem(peak_text)
 
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
-plot.setXRange(1, 3.3)
-xticks = [
-    [
-        (np.log10(10), '10'),
-        (np.log10(20), '20'),
-        (np.log10(50), '50'),
-        (np.log10(100), '100'),
-        (np.log10(200), '200'),
-        (np.log10(500), '500'),
-        (np.log10(1000), '1000'),
-        (np.log10(2000), '2000')]
-]
+
+x0 = np.log10(f0)
+xn = np.log10(f1)
+xticks = [[
+        (x0, str(round(10**x0))),
+        (xn, str(round(10**xn))),
+]]
+plot.setXRange(x0, xn)
 plot.getAxis('bottom').setTicks(xticks)
 plot.setYRange(-50, 0)
 
