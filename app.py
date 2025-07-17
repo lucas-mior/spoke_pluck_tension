@@ -55,7 +55,7 @@ main_layout.addWidget(tension_label)
 
 window = pyqtgraph.GraphicsLayoutWidget()
 main_layout.addWidget(window)
-plot = window.addPlot(title="Frequency Spectrum (dB)")
+plot = window.addPlot(title="Frequency Spectrum")
 plot.setLogMode(x=True, y=False)
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
@@ -124,8 +124,8 @@ def update_plot():
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = 20*np.log10(spectrum_smoothed)
-    if max(spectrum_db) > spectrum_max:
-        spectrum_max = max(spectrum_db)
+    if max(spectrum_db) + 2 > spectrum_max:
+        spectrum_max = max(spectrum_db) + 2
     plot.setYRange(-100, spectrum_max)
 
     curve.setData(frequencies, spectrum_db)
@@ -154,8 +154,7 @@ def update_plot():
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
-        y_val = spectrum_db[idx] + 5
-        peak_text.setPos(np.log10(last_valid_frequency), y_val)
+        peak_text.setPos(np.log10(last_valid_frequency), spectrum_db[idx] + 3)
         peak_text.setText(f"{last_valid_frequency:.0f} Hz")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
