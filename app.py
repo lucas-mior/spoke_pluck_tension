@@ -22,7 +22,7 @@ bandpass = butter(order,
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
-app = QtWidgets.QApplication([])
+qt_application = QtWidgets.QApplication([])
 
 spectrum_smoothed = np.zeros(len(frequencies))
 alpha = 0.2
@@ -141,4 +141,4 @@ with sd.InputStream(callback=audio_callback,
     main_window.setWindowTitle("Spoke Tension Analyzer")
     main_window.resize(800, 600)
     main_window.show()
-    app.exec()
+    qt_application.exec()
