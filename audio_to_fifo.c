@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <portaudio.h>
 #include <stdint.h>
@@ -15,13 +14,14 @@ typedef int16_t int16;
 #define FIFO_PATH "/tmp/audio_fifo"
 
 static int
-audio_callback(const void *inputBuffer, void *outputBuffer,
+audio_callback(const void *inputBuffer,
+               void *outputBuffer,
                unsigned long framesPerBuffer,
-               const PaStreamCallbackTimeInfo* timeInfo,
+               const PaStreamCallbackTimeInfo *timeInfo,
                PaStreamCallbackFlags statusFlags,
                void *userData) {
     int *fifo = userData;
-    const int16 *in = (const int16 *)inputBuffer;
+    int16 *in = inputBuffer;
 
     if (inputBuffer == NULL) {
         for (unsigned long i = 0; i < framesPerBuffer; i++) {
