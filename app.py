@@ -154,6 +154,8 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
+    return
+
 
 frame_index = 0
 if not use_microphone:
