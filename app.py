@@ -21,7 +21,7 @@ freqs = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
 data_queue = Queue()
 app = QtWidgets.QApplication([])
 
-spectrum_db_smoothed = np.zeros(len(freqs))
+spectrum_smoothed = np.zeros(len(freqs))
 alpha = 0.2
 
 main_window = QtWidgets.QWidget()
@@ -74,7 +74,7 @@ def detect_fundamental_autocorr(signal, fs):
 
 
 def update_plot():
-    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time, spectrum_db_smoothed
+    global last_valid_frequency, last_valid_tension, last_valid_time, last_update_time, spectrum_smoothed
 
     if data_queue.empty():
         return
@@ -84,10 +84,10 @@ def update_plot():
     windowed = data*np.hanning(len(data))
     spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_db = 20*np.log10(spectrum)
+    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
+    spectrum_db = 20*np.log10(spectrum_smoothed)
 
-    spectrum_db_smoothed = alpha * spectrum_db + (1 - alpha) * spectrum_db_smoothed
-    curve.setData(freqs, spectrum_db_smoothed)
+    curve.setData(freqs, spectrum_db)
 
     now = QtCore.QTime.currentTime()
     fundamental = detect_fundamental_autocorr(data, sample_rate)
@@ -110,7 +110,7 @@ def update_plot():
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(freqs - last_valid_frequency))
-        y_val = spectrum_db_smoothed[idx] + 5
+        y_val = spectrum_db[idx] + 5
         peak_text.setPos(last_valid_frequency, y_val)
         peak_text.setText(f"{last_valid_frequency:.1f} Hz")
         freq_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
