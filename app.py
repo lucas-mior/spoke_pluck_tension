@@ -137,7 +137,7 @@ def update_plot():
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
         y_val = spectrum_db[idx] + 5
-        peak_text.setPos(last_valid_frequency, y_val)
+        peak_text.setPos(np.log10(last_valid_frequency), y_val)
         peak_text.setText(f"{last_valid_frequency:.1f} Hz")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.1f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.1f} N  ({kgf:.1f} kgf)")
