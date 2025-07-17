@@ -10,7 +10,7 @@ import spokes
 
 use_microphone = True
 sample_rate = 44100
-blocksize = 1024
+blocksize = 4096
 alpha = 0.5
 
 frequency_min = 50
@@ -105,8 +105,6 @@ def update_plot():
 
     if data_queue.empty():
         return
-    while data_queue.qsize() > 1:
-        data_queue.get()
     data = data_queue.get()
 
     data = scipy.signal.sosfilt(bandpass, data)
@@ -125,6 +123,7 @@ def update_plot():
     fundamental = detect_fundamental_autocorrelation(data, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
+    freq_diff_ok = False
     if last_valid_frequency is None:
         freq_diff_ok = True
     elif abs(fundamental - last_valid_frequency) > min_freq_change:
