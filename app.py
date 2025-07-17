@@ -9,8 +9,8 @@ import spokes
 sample_rate = 44100
 blocksize = 4096
 
-f_low = spokes.frequency(500)
-f_high = spokes.frequency(2000)
+f_low = 50  #spokes.frequency(500)
+f_high = 1500  #spokes.frequency(2000)
 print(f"{f_low=:.1f} {f_high=:.1f}")
 
 band = [f_low, f_high]
