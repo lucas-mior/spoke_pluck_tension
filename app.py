@@ -11,8 +11,8 @@ import spokes
 # ==== CONFIG ====
 use_microphone = True  # Set to False to use "output.wav"
 sample_rate = 44100
-blocksize = 4096
-alpha = 0.8
+blocksize = 1024
+alpha = 0.5
 
 frequency_min = 50
 frequency_max = 1500
@@ -188,7 +188,7 @@ else:
 timer = QtCore.QTimer()
 timer.timeout.connect(update_plot)
 timer.timeout.connect(stream_from_file)
-timer.start(int(1000*blocksize / sample_rate))
+timer.start(33)
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
 main_window.resize(800, 600)
