@@ -7,6 +7,7 @@ import numpy as np
 import soundfile as sf
 import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
+from PyQt6.QtCore import Qt
 import scipy
 import subprocess
 import select
@@ -20,25 +21,10 @@ sample_rate = 44100
 blocksize = 4096
 alpha = 0.5
 
-# Spoke tension range: [500N, 2000N]
-# Spoke frequency range: [353Hz, 705Hz]
-
-frequency_min = spokes.frequency(200)
-frequency_max = spokes.frequency(5000)
-f0 = frequency_min/2
-f1 = frequency_max*4
-print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
-
-order = 5
-bandpass = scipy.signal.butter(order,
-                               [f0, f1],
-                               btype='bandpass',
-                               fs=sample_rate,
-                               output='sos')
-
-frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-spectrum_smoothed = np.zeros(len(frequencies))
-spectrum_max = 0
+tension_min = 200
+tension_max = 2000
+frequency_min = round(spokes.frequency(tension_min))
+frequency_max = round(spokes.frequency(tension_max))
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -56,6 +42,55 @@ tension_label.setStyleSheet("""
 font-size: 22pt; color: orange; background-color: black;
 """)
 main_layout.addWidget(tension_label)
+
+frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+spectrum_smoothed = np.zeros(len(frequencies))
+spectrum_max = 0
+
+
+def on_slider_changed():
+    global frequency_min, frequency_max, f0, f1, min_lag, max_lag
+    global last_valid_frequency, last_valid_tension
+    global last_valid_time, last_update_time
+    global spectrum_smoothed, spectrum_max
+    global last_fundamentals
+
+    frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+    spectrum_smoothed = np.zeros(len(frequencies))
+    spectrum_max = 0
+
+    frequency_min = spokes.frequency(min_slider.value())
+    frequency_max = spokes.frequency(max_slider.value())
+    f0 = frequency_min/2
+    f1 = frequency_max*4
+    min_lag = int(sample_rate / f1)
+    max_lag = int(sample_rate / f0)
+
+    print(f"{frequency_min=} {frequency_max=}")
+
+    return
+
+
+slider_layout = QtWidgets.QHBoxLayout()
+min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+
+min_slider.setMinimum(100)
+min_slider.setMaximum(500)
+max_slider.setMinimum(600)
+max_slider.setMaximum(1000)
+
+min_slider.setValue(frequency_min)
+max_slider.setValue(frequency_max)
+
+min_slider.valueChanged.connect(on_slider_changed)
+max_slider.valueChanged.connect(on_slider_changed)
+
+slider_layout.addWidget(min_slider)
+slider_layout.addWidget(max_slider)
+main_layout.addLayout(slider_layout)
+
+on_slider_changed()
 
 window = pyqtgraph.GraphicsLayoutWidget()
 main_layout.addWidget(window)
@@ -97,7 +132,7 @@ min_freq_change = 5.0
 
 max_lag = int(sample_rate / f0)
 min_lag = int(sample_rate / f1)
-last_fundamentals = deque(maxlen=3)  # store last 3 detected fundamentals
+last_fundamentals = deque(maxlen=3)
 
 correlation_plot = window.addPlot(title="Autocorrelation")
 correlation_curve = correlation_plot.plot(pen='g')
@@ -107,6 +142,7 @@ correlation_plot.setYRange(0, 1)
 correlation_plot.setXRange(min_lag, max_lag)
 
 correlation_lags = np.arange(min_lag, max_lag)
+
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
@@ -124,7 +160,6 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
         return 0.0
     return sample_rate / peak_idx
 
-
 def update_plot():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
@@ -141,7 +176,6 @@ def update_plot():
 
     data = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
     data /= np.iinfo(np.int16).max
-    # data = scipy.signal.sosfilt(bandpass, data)
     data = data*np.hanning(len(data))
 
     spectrum = np.abs(np.fft.rfft(data)) / len(data)
@@ -149,7 +183,6 @@ def update_plot():
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = spectrum_smoothed
 
-    # spectrum_db = 20*np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
     plot.setYRange(-0.05, 0.05)
@@ -213,7 +246,6 @@ def update_plot():
             peak_text_items[i].setText("")
 
     return
-
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
