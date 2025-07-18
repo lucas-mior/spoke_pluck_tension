@@ -171,11 +171,11 @@ def update_plot():
         print("BlockingIO")
         return
 
-    data = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
-    data /= np.iinfo(np.int16).max
-    data = data*np.hanning(len(data))
+    signal = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
+    signal /= np.iinfo(np.int16).max
+    signal = signal*np.hanning(len(signal))
 
-    spectrum = np.abs(np.fft.rfft(data)) / len(data)
+    spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
     spectrum_db = spectrum_smoothed
@@ -186,7 +186,7 @@ def update_plot():
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorrelation(data, sample_rate)
+    fundamental = detect_fundamental_autocorrelation(signal, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (
