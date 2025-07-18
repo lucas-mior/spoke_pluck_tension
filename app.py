@@ -180,9 +180,11 @@ def update_plot():
     spectrum_smooth = (1 - alpha_spectrum)*spectrum_smooth + alpha_spectrum*spectrum
     spectrum_db = spectrum_smooth
 
-    if max(spectrum_db) > spectrum_max:
-        spectrum_max = max(spectrum_db)
-    plot.setYRange(-0.01, 0.05)
+    if max(spectrum_smooth) > spectrum_max:
+        spectrum_max = max(spectrum_smooth)
+    if spectrum_max > 4*max(spectrum_smooth):
+        spectrum_max = max(spectrum_smooth)
+    plot.setYRange(0.0, spectrum_max)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
