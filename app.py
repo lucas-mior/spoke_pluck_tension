@@ -32,13 +32,18 @@ main_window.setLayout(main_layout)
 
 frequency_label = QtWidgets.QLabel("Frequency: -- Hz")
 frequency_label.setStyleSheet("""
-font-size: 22pt; color: cyan; background-color: black;
+    font-size: 22pt;
+    color: cyan;
+    background-color: black;
 """)
 main_layout.addWidget(frequency_label)
 
 tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
 tension_label.setStyleSheet("""
-font-size: 22pt; color: orange; background-color: black;
+    font-size: 22pt;
+    color: orange;
+    background-color:
+    black;
 """)
 main_layout.addWidget(tension_label)
 
