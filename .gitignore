@@ -1,3 +1,8 @@
 audio_to_fifo
 read_fifo
 *.out
+.tags.vim
+tags
+YAPPT_v4.0/
+Tuner
+notedetection
