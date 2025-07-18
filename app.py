@@ -197,13 +197,13 @@ def update_plot():
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
         a = spectrum_db[idx]
-        if (a > 0.02):
+        if (a > 0.01):
             f = frequencies[idx]
             T = spokes.tension(f)
             xloc = f
             if use_log_frequency:
                 xloc = np.log10(xloc)
-            peak_text_items[i].setPos(xloc, a)
+            peak_text_items[i].setPos(xloc, a+i*10)
             peak_text_items[i].setText(f"{f:.0f} Hz = {T:.0f} N")
         else:
             peak_text_items[i].setText("")
