@@ -154,7 +154,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     energy = np.sum(signal**2)
     if energy < 1 or peak_idx == 0:
         return 0.0
-    return round(sample_rate / peak_idx)
+    return int(round(sample_rate / peak_idx))
 
 
 def update_plot():
