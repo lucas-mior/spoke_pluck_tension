@@ -202,7 +202,7 @@ def update_plot():
     for i, idx in enumerate(peaks):
         a = spectrum_db[idx]
         f = frequencies[idx]
-        if a > 0.01 and f > frequency_min:
+        if a > 0.005 and f > frequency_min:
             T = spokes.tension(f)
             xloc = f
             if use_log_frequency:
