@@ -63,7 +63,10 @@ plot = window.addPlot(title="Frequency Spectrum")
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
-peak_text_items = [pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(3)]
+nextra_frequencies = 5
+peak_text_items = [
+    pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(nextra_frequencies)
+]
 for peak_text_item in peak_text_items:
     plot.addItem(peak_text_item)
 
@@ -193,12 +196,13 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
-    peaks = np.argpartition(spectrum_db, -3)[-3:]
+    peaks = np.argpartition(spectrum_db, -nextra_frequencies)
+    peaks = peaks[-nextra_frequencies:]
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
         a = spectrum_db[idx]
-        if (a > 0.01):
-            f = frequencies[idx]
+        f = frequencies[idx]
+        if a > 0.01 and f > frequency_min:
             T = spokes.tension(f)
             xloc = f
             if use_log_frequency:
