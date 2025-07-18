@@ -124,11 +124,12 @@ def update_plot():
     spectrum = np.abs(np.fft.rfft(data)) / len(data)
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
+    spectrum_db = spectrum_smoothed
 
-    spectrum_db = 20*np.log10(spectrum_smoothed)
+    # spectrum_db = 20*np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
-    plot.setYRange(-80, spectrum_max)
+    plot.setYRange(-0.05, 0.05)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
@@ -158,7 +159,7 @@ def update_plot():
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
-        peak_text.setPos(np.log10(last_valid_frequency), spectrum_db[idx] + 3)
+        peak_text.setPos(np.log10(last_valid_frequency), spectrum_db[idx])
         peak_text.setText(f"{last_valid_frequency:.0f} Hz")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
