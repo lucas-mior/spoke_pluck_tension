@@ -118,10 +118,12 @@ def update_plot():
 
     data = np.frombuffer(raw, dtype=np.int16)
     data = scipy.signal.sosfilt(bandpass, data)
-    windowed = data*np.hanning(len(data))
-    spectrum = np.abs(np.fft.rfft(windowed)) / len(windowed)
+    data = data*np.hanning(len(data))
+
+    spectrum = np.abs(np.fft.rfft(data)) / len(data)
     spectrum[spectrum == 0] = 1e-12
     spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
+
     spectrum_db = 20*np.log10(spectrum_smoothed)
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
