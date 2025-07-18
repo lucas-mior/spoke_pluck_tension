@@ -185,7 +185,7 @@ def update_plot():
 
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
-    plot.setYRange(-0.05, 0.05)
+    plot.setYRange(-0.01, 0.05)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
