@@ -117,6 +117,7 @@ def update_plot():
         return
 
     data = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
+    data /= np.iinfo(np.int16).max
     # data = scipy.signal.sosfilt(bandpass, data)
     data = data*np.hanning(len(data))
 
