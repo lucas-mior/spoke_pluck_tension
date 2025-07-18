@@ -18,7 +18,7 @@ import spokes
 
 sample_rate = 44100
 blocksize = 4096
-alpha = 0.5
+alpha_spectrum = 0.5
 
 tension_min = 200
 tension_max = 2000
@@ -43,7 +43,7 @@ font-size: 22pt; color: orange; background-color: black;
 main_layout.addWidget(tension_label)
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-spectrum_smoothed = np.zeros(len(frequencies))
+spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
 
@@ -51,11 +51,11 @@ def on_slider_changed():
     global frequency_min, frequency_max, f0, f1, min_lag, max_lag
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
-    global spectrum_smoothed, spectrum_max
+    global spectrum_smooth, spectrum_max
     global last_fundamentals
 
     frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-    spectrum_smoothed = np.zeros(len(frequencies))
+    spectrum_smooth = np.zeros(len(frequencies))
     spectrum_max = 0
 
     frequency_min = spokes.frequency(min_slider.value())
@@ -160,7 +160,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
 def update_plot():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
-    global spectrum_smoothed, spectrum_max
+    global spectrum_smooth, spectrum_max
     global last_fundamentals
 
     try:
@@ -171,14 +171,14 @@ def update_plot():
         print("BlockingIO")
         return
 
-    data = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
-    data /= np.iinfo(np.int16).max
-    data = data*np.hanning(len(data))
+    signal = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
+    signal /= np.iinfo(np.int16).max
+    signal = signal*np.hanning(len(signal))
 
-    spectrum = np.abs(np.fft.rfft(data)) / len(data)
+    spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
-    spectrum_db = spectrum_smoothed
+    spectrum_smooth = (1 - alpha_spectrum)*spectrum_smooth + alpha_spectrum*spectrum
+    spectrum_db = spectrum_smooth
 
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
@@ -186,7 +186,7 @@ def update_plot():
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorrelation(data, sample_rate)
+    fundamental = detect_fundamental_autocorrelation(signal, sample_rate)
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (
@@ -210,14 +210,16 @@ def update_plot():
         last_fundamentals.clear()
 
     if last_valid_frequency is not None:
-        kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
+
         xloc = last_valid_frequency
         if use_log_frequency:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(f"{last_valid_frequency}Hz = {last_valid_tension}N")
+
         frequency_label.setText(f"Frequency: {last_valid_frequency}Hz")
+        kgf = last_valid_tension / 9.80665
         tension_label.setText(f"Tension: {last_valid_tension}N  ({kgf}kgf)")
     else:
         frequency_label.setText("Frequency: -- Hz")
