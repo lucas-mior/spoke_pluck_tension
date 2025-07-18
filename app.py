@@ -210,14 +210,16 @@ def update_plot():
         last_fundamentals.clear()
 
     if last_valid_frequency is not None:
-        kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
+
         xloc = last_valid_frequency
         if use_log_frequency:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(f"{last_valid_frequency}Hz = {last_valid_tension}N")
+
         frequency_label.setText(f"Frequency: {last_valid_frequency}Hz")
+        kgf = last_valid_tension / 9.80665
         tension_label.setText(f"Tension: {last_valid_tension}N  ({kgf}kgf)")
     else:
         frequency_label.setText("Frequency: -- Hz")
