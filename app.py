@@ -185,7 +185,7 @@ def update_plot():
 
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
-    plot.setYRange(-0.05, 0.05)
+    plot.setYRange(-0.01, 0.05)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
@@ -233,15 +233,15 @@ def update_plot():
     peaks = peaks[-nextra_frequencies:]
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
-        a = spectrum_db[idx]
-        f = frequencies[idx]
-        if a > 0.005 and f > frequency_min:
+        amplitude = spectrum_db[idx]
+        frequency = frequencies[idx]
+        if amplitude > 0.005 and frequency_min < frequency < frequency_max:
             T = spokes.tension(f)
             xloc = f
             if use_log_frequency:
                 xloc = np.log10(xloc)
-            peak_text_items[i].setPos(xloc, a+i*10)
-            peak_text_items[i].setText(f"{f:.0f} Hz = {T:.0f} N")
+            peak_text_items[i].setPos(xloc, amplitude+i*10)
+            peak_text_items[i].setText(f"{f:.0f}Hz = {T:.0f}N")
         else:
             peak_text_items[i].setText("")
 
