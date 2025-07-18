@@ -23,7 +23,7 @@ alpha = 0.5
 # Spoke tension range: [500N, 2000N]
 # Spoke frequency range: [353Hz, 705Hz]
 
-frequency_min = spokes.frequency(100)
+frequency_min = spokes.frequency(200)
 frequency_max = spokes.frequency(3000)
 f0 = frequency_min/2
 f1 = frequency_max*4
@@ -67,12 +67,16 @@ plot.addItem(peak_text)
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
 
-plot.setLogMode(x=True, y=False)
-xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-xticks = np.array([[(np.log10(f), str(round(f))) for f in xs]], dtype=object)
-print(f"{xs=}, ", type(xs), xs.shape)
-plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
-plot.getAxis('bottom').setTicks(xticks)
+use_log_frequency = False
+if use_log_frequency:
+    plot.setLogMode(x=True, y=False)
+    xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
+    xticks = np.array([[(np.log10(f), str(round(f))) for f in xs]], dtype=object)
+    print(f"{xs=}, ", type(xs), xs.shape)
+    plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
+    plot.getAxis('bottom').setTicks(xticks)
+else:
+    plot.setXRange(f0, f1)
 plot.setYRange(-50, 0)
 
 last_valid_frequency = None
@@ -159,7 +163,10 @@ def update_plot():
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
-        peak_text.setPos(np.log10(last_valid_frequency), spectrum_db[idx])
+        xloc = last_valid_frequency
+        if use_log_frequency:
+            xloc = np.log10(xloc)
+        peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(f"{last_valid_frequency:.0f} Hz")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
