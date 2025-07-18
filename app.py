@@ -63,6 +63,9 @@ plot = window.addPlot(title="Frequency Spectrum")
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
+peak_text_items = [pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(3)]
+for peak_text_item in peak_text_items:
+    plot.addItem(peak_text_item)
 
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
@@ -173,6 +176,8 @@ def update_plot():
         last_valid_tension = None
         last_fundamentals.clear()
 
+    for item in peak_text_items:
+        item.setText("")
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
@@ -187,6 +192,17 @@ def update_plot():
         frequency_label.setText("Frequency: -- Hz")
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
+
+    peaks = np.argpartition(spectrum_db, -3)[-3:]
+    peaks = peaks[np.argsort(-spectrum_db[peaks])]
+    for i, idx in enumerate(peaks):
+        f = frequencies[idx]
+        a = spectrum_db[idx]
+        xloc = f
+        if use_log_frequency:
+            xloc = np.log10(xloc)
+        peak_text_items[i].setPos(xloc, a)
+        peak_text_items[i].setText(f"{f:.0f} Hz")
 
     return
 
@@ -208,7 +224,7 @@ atexit.register(fifo_file.close)
 atexit.register(fifo_proc.terminate)
 
 main_window.setWindowTitle("Spoke Tension Analyzer")
-main_window.resize(800, 600)
+main_window.resize(1000, 600)
 main_window.show()
 
 poller = select.poll()
