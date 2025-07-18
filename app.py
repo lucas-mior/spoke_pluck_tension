@@ -112,7 +112,6 @@ if use_log_frequency:
     xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
     xticks = [[(np.log10(f), str(round(f))) for f in xs]]
     xticks = np.array(xticks, dtype=object)
-    print(f"{xs=}, ", type(xs), xs.shape)
     plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
     plot.getAxis('bottom').setTicks(xticks)
 else:
