@@ -24,7 +24,7 @@ alpha = 0.5
 # Spoke frequency range: [353Hz, 705Hz]
 
 frequency_min = spokes.frequency(200)
-frequency_max = spokes.frequency(3000)
+frequency_max = spokes.frequency(5000)
 f0 = frequency_min/2
 f1 = frequency_max*4
 print(f"{frequency_min=:.1f} {frequency_max=:.1f}")
@@ -92,6 +92,14 @@ max_lag = int(sample_rate / f0)
 min_lag = int(sample_rate / f1)
 last_fundamentals = deque(maxlen=3)  # store last 3 detected fundamentals
 
+correlation_plot = window.addPlot(title="Autocorrelation")
+correlation_curve = correlation_plot.plot(pen='g')
+correlation_plot.setLabel('left', 'Correlation')
+correlation_plot.setLabel('bottom', 'Lag')
+correlation_plot.setYRange(0, 1)
+correlation_plot.setXRange(min_lag, max_lag)
+
+correlation_lags = np.arange(min_lag, max_lag)
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
@@ -99,10 +107,13 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     correlation = correlation[(len(correlation) // 2):]
     correlation[:min_lag] = 0
 
-    peak_idx = np.argmax(correlation[min_lag:max_lag]) + min_lag
+    correlation /= np.max(np.abs(correlation))
+    correlation = correlation[min_lag:max_lag]
+    correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
+
+    peak_idx = np.argmax(correlation) + min_lag
     if peak_idx == 0:
         return 0.0
-
     return sample_rate / peak_idx
 
 
