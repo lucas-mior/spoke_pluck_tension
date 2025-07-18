@@ -212,8 +212,6 @@ def update_plot():
         last_valid_tension = None
         last_fundamentals.clear()
 
-    for item in peak_text_items:
-        item.setText("")
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
         idx = np.argmin(np.abs(frequencies - last_valid_frequency))
