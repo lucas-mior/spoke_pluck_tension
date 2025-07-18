@@ -43,7 +43,7 @@ font-size: 22pt; color: orange; background-color: black;
 main_layout.addWidget(tension_label)
 
 frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-spectrum_smoothed = np.zeros(len(frequencies))
+spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
 
@@ -51,11 +51,11 @@ def on_slider_changed():
     global frequency_min, frequency_max, f0, f1, min_lag, max_lag
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
-    global spectrum_smoothed, spectrum_max
+    global spectrum_smooth, spectrum_max
     global last_fundamentals
 
     frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-    spectrum_smoothed = np.zeros(len(frequencies))
+    spectrum_smooth = np.zeros(len(frequencies))
     spectrum_max = 0
 
     frequency_min = spokes.frequency(min_slider.value())
@@ -160,7 +160,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
 def update_plot():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
-    global spectrum_smoothed, spectrum_max
+    global spectrum_smooth, spectrum_max
     global last_fundamentals
 
     try:
@@ -177,8 +177,8 @@ def update_plot():
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha_spectrum)*spectrum_smoothed + alpha_spectrum*spectrum
-    spectrum_db = spectrum_smoothed
+    spectrum_smooth = (1 - alpha_spectrum)*spectrum_smooth + alpha_spectrum*spectrum
+    spectrum_db = spectrum_smooth
 
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
