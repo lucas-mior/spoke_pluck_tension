@@ -68,14 +68,11 @@ plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
 
 plot.setLogMode(x=True, y=False)
-x0 = np.log10(f0)
-xn = np.log10(f1)
-# xticks = [[
-#         (x0, str(round(10**x0))),
-#         (xn, str(round(10**xn))),
-# ]]
-plot.setXRange(x0, xn)
-# plot.getAxis('bottom').setTicks(xticks)
+xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
+xticks = np.array([[(np.log10(f), str(round(f))) for f in xs]], dtype=object)
+print(f"{xs=}, ", type(xs), xs.shape)
+plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
+plot.getAxis('bottom').setTicks(xticks)
 plot.setYRange(-50, 0)
 
 last_valid_frequency = None
@@ -120,7 +117,7 @@ def update_plot():
         return
 
     data = np.frombuffer(raw, dtype=np.int16)
-    data = scipy.signal.sosfilt(bandpass, data)
+    # data = scipy.signal.sosfilt(bandpass, data)
     data = data*np.hanning(len(data))
 
     spectrum = np.abs(np.fft.rfft(data)) / len(data)
