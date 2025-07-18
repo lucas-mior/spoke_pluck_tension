@@ -11,6 +11,7 @@ import scipy
 import subprocess
 import select
 import time
+from collections import deque
 
 import spokes
 
@@ -88,6 +89,7 @@ min_freq_change = 5.0
 
 max_lag = int(sample_rate / f0)
 min_lag = int(sample_rate / f1)
+last_fundamentals = deque(maxlen=3)  # store last 3 detected fundamentals
 
 
 def detect_fundamental_autocorrelation(signal, sample_rate):
@@ -107,6 +109,7 @@ def update_plot():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
     global spectrum_smoothed, spectrum_max
+    global last_fundamentals
 
     try:
         raw = fifo_file.read(blocksize*2)
@@ -128,7 +131,6 @@ def update_plot():
     if max(spectrum_db) > spectrum_max:
         spectrum_max = max(spectrum_db)
     plot.setYRange(-80, spectrum_max)
-
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
@@ -142,8 +144,10 @@ def update_plot():
 
     if update_allowed and freq_diff_ok:
         if frequency_min < fundamental < frequency_max:
-            tension = spokes.tension(fundamental)
-            last_valid_frequency = fundamental
+            last_fundamentals.append(fundamental)
+            median_freq = np.median(last_fundamentals)
+            tension = spokes.tension(median_freq)
+            last_valid_frequency = median_freq
             last_valid_tension = tension
             last_valid_time = now
             last_update_time = now
@@ -151,6 +155,7 @@ def update_plot():
     if last_valid_time.msecsTo(now) > hold_duration:
         last_valid_frequency = None
         last_valid_tension = None
+        last_fundamentals.clear()
 
     if last_valid_frequency is not None:
         kgf = last_valid_tension / 9.80665
