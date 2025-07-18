@@ -93,7 +93,7 @@ min_lag = int(sample_rate / f1)
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
     correlation = np.correlate(signal, signal, mode='full')
-    correlation = correlation[len(correlation) // 2:]
+    correlation = correlation[(len(correlation) // 2):]
     correlation[:min_lag] = 0
 
     peak_idx = np.argmax(correlation[min_lag:max_lag]) + min_lag
