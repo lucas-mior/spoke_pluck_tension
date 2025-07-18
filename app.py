@@ -63,7 +63,10 @@ plot = window.addPlot(title="Frequency Spectrum")
 curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
-peak_text_items = [pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(3)]
+nextra_frequencies = 5
+peak_text_items = [
+    pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(nextra_frequencies)
+]
 for peak_text_item in peak_text_items:
     plot.addItem(peak_text_item)
 
@@ -185,7 +188,7 @@ def update_plot():
         if use_log_frequency:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_valid_frequency:.0f} Hz")
+        peak_text.setText(f"{last_valid_frequency:.0f} Hz = {last_valid_tension:.0f} N")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
     else:
@@ -193,16 +196,21 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
-    peaks = np.argpartition(spectrum_db, -3)[-3:]
+    peaks = np.argpartition(spectrum_db, -nextra_frequencies)
+    peaks = peaks[-nextra_frequencies:]
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
-        f = frequencies[idx]
         a = spectrum_db[idx]
-        xloc = f
-        if use_log_frequency:
-            xloc = np.log10(xloc)
-        peak_text_items[i].setPos(xloc, a)
-        peak_text_items[i].setText(f"{f:.0f} Hz")
+        f = frequencies[idx]
+        if a > 0.005 and f > frequency_min:
+            T = spokes.tension(f)
+            xloc = f
+            if use_log_frequency:
+                xloc = np.log10(xloc)
+            peak_text_items[i].setPos(xloc, a+i*10)
+            peak_text_items[i].setText(f"{f:.0f} Hz = {T:.0f} N")
+        else:
+            peak_text_items[i].setText("")
 
     return
 
