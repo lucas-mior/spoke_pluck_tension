@@ -185,7 +185,7 @@ def update_plot():
         if use_log_frequency:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_valid_frequency:.0f} Hz")
+        peak_text.setText(f"{last_valid_frequency:.0f} Hz = {last_valid_tension:.0f} N")
         frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
         tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
     else:
@@ -196,13 +196,17 @@ def update_plot():
     peaks = np.argpartition(spectrum_db, -3)[-3:]
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
-        f = frequencies[idx]
         a = spectrum_db[idx]
-        xloc = f
-        if use_log_frequency:
-            xloc = np.log10(xloc)
-        peak_text_items[i].setPos(xloc, a)
-        peak_text_items[i].setText(f"{f:.0f} Hz")
+        if (a > 0.02):
+            f = frequencies[idx]
+            T = spokes.tension(f)
+            xloc = f
+            if use_log_frequency:
+                xloc = np.log10(xloc)
+            peak_text_items[i].setPos(xloc, a)
+            peak_text_items[i].setText(f"{f:.0f} Hz = {T:.0f} N")
+        else:
+            peak_text_items[i].setText("")
 
     return
 
