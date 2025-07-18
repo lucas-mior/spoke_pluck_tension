@@ -52,7 +52,7 @@ def on_slider_changed():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
     global spectrum_smooth, spectrum_max
-    global last_fundamentals
+    global last_fundamentals, frequencies
 
     frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
     spectrum_smooth = np.zeros(len(frequencies))
@@ -187,6 +187,7 @@ def update_plot():
 
     now = QtCore.QTime.currentTime()
     fundamental = detect_fundamental_autocorrelation(signal, sample_rate)
+    print(f"{fundamental=}")
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
     freq_diff_ok = (
@@ -197,7 +198,7 @@ def update_plot():
     if update_allowed and freq_diff_ok:
         if frequency_min < fundamental < frequency_max:
             last_fundamentals.append(fundamental)
-            median_freq = np.median(last_fundamentals)
+            median_freq = int(round(np.median(last_fundamentals)))
             tension = spokes.tension(median_freq)
             last_valid_frequency = median_freq
             last_valid_tension = tension
@@ -219,7 +220,7 @@ def update_plot():
         peak_text.setText(f"{last_valid_frequency}Hz = {last_valid_tension}N")
 
         frequency_label.setText(f"Frequency: {last_valid_frequency}Hz")
-        kgf = last_valid_tension / 9.80665
+        kgf = int(round(last_valid_tension / 9.80665))
         tension_label.setText(f"Tension: {last_valid_tension}N  ({kgf}kgf)")
     else:
         frequency_label.setText("Frequency: -- Hz")
@@ -231,7 +232,7 @@ def update_plot():
     peaks = peaks[np.argsort(-spectrum_db[peaks])]
     for i, idx in enumerate(peaks):
         amplitude = spectrum_db[idx]
-        frequency = frequencies[idx]
+        frequency = int(round(frequencies[idx]))
         if amplitude > 0.005 and frequency_min < frequency < frequency_max:
             tension = spokes.tension(frequency)
             xloc = frequency
