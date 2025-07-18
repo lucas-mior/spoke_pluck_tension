@@ -52,97 +52,6 @@ spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
 
-def on_slider_changed():
-    global frequency_min, frequency_max, f0, f1, min_lag, max_lag
-    global last_valid_frequency, last_valid_tension
-    global last_valid_time, last_update_time
-    global spectrum_smooth, spectrum_max
-    global last_fundamentals, frequencies
-
-    frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
-    spectrum_smooth = np.zeros(len(frequencies))
-    spectrum_max = 0
-
-    frequency_min = spokes.frequency(min_slider.value())
-    frequency_max = spokes.frequency(max_slider.value())
-    f0 = frequency_min/2
-    f1 = frequency_max*4
-    min_lag = int(sample_rate / f1)
-    max_lag = int(sample_rate / f0)
-
-    print(f"{frequency_min=} {frequency_max=}")
-
-    return
-
-
-slider_layout = QtWidgets.QHBoxLayout()
-min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-
-min_slider.setMinimum(100)
-min_slider.setMaximum(500)
-max_slider.setMinimum(600)
-max_slider.setMaximum(1000)
-
-min_slider.setValue(frequency_min)
-max_slider.setValue(frequency_max)
-
-min_slider.valueChanged.connect(on_slider_changed)
-max_slider.valueChanged.connect(on_slider_changed)
-
-slider_layout.addWidget(min_slider)
-slider_layout.addWidget(max_slider)
-main_layout.addLayout(slider_layout)
-
-on_slider_changed()
-
-window = pyqtgraph.GraphicsLayoutWidget()
-main_layout.addWidget(window)
-plot = window.addPlot(title="Frequency Spectrum")
-curve = plot.plot(pen='y')
-peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
-plot.addItem(peak_text)
-nextra_frequencies = 5
-peak_texts = []
-for i in range(nextra_frequencies):
-    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
-    plot.addItem(peak_texts[i])
-
-plot.setLabel('left', 'Magnitude (dB)')
-plot.setLabel('bottom', 'Frequency (Hz)')
-
-use_log_frequency = False
-if use_log_frequency:
-    plot.setLogMode(x=True, y=False)
-    xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-    xticks = [[(np.log10(f), str(round(f))) for f in xs]]
-    xticks = np.array(xticks, dtype=object)
-    plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
-    plot.getAxis('bottom').setTicks(xticks)
-else:
-    plot.setXRange(f0, f1)
-plot.setYRange(-50, 0)
-
-last_valid_frequency = None
-last_valid_tension = None
-last_valid_time = QtCore.QTime.currentTime()
-last_update_time = QtCore.QTime.currentTime()
-
-hold_duration = 1000
-min_update_interval = 300
-min_freq_change = 5.0
-
-last_fundamentals = deque(maxlen=3)
-correlation_plot = window.addPlot(title="Autocorrelation")
-correlation_curve = correlation_plot.plot(pen='g')
-correlation_plot.setLabel('left', 'Correlation')
-correlation_plot.setLabel('bottom', 'Lag')
-correlation_plot.setYRange(0, 1)
-correlation_plot.setXRange(min_lag, max_lag)
-
-correlation_lags = np.arange(min_lag, max_lag)
-
-
 def detect_fundamental_autocorrelation(signal, sample_rate):
     signal = signal - np.mean(signal)
     correlation = np.correlate(signal, signal, mode='full')
@@ -160,7 +69,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     return int(round(sample_rate / peak_idx))
 
 
-def update_plot():
+def on_data_available():
     global last_valid_frequency, last_valid_tension
     global last_valid_time, last_update_time
     global spectrum_smooth, spectrum_max
@@ -187,7 +96,7 @@ def update_plot():
         spectrum_max = max(spectrum_smooth)
     if spectrum_max > 4*max(spectrum_smooth):
         spectrum_max = max(spectrum_smooth)
-    plot.setYRange(0.0, spectrum_max)
+    plot_spectrum.setYRange(0.0, spectrum_max)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
@@ -250,6 +159,97 @@ def update_plot():
 
     return
 
+def on_slider_changed():
+    global frequency_min, frequency_max, f0, f1, min_lag, max_lag
+    global last_valid_frequency, last_valid_tension
+    global last_valid_time, last_update_time
+    global spectrum_smooth, spectrum_max
+    global last_fundamentals, frequencies
+
+    frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+    spectrum_smooth = np.zeros(len(frequencies))
+    spectrum_max = 0
+
+    frequency_min = spokes.frequency(min_slider.value())
+    frequency_max = spokes.frequency(max_slider.value())
+    f0 = frequency_min/2
+    f1 = frequency_max*4
+    min_lag = int(sample_rate / f1)
+    max_lag = int(sample_rate / f0)
+
+    print(f"{frequency_min=} {frequency_max=}")
+
+    return
+
+
+slider_layout = QtWidgets.QHBoxLayout()
+min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+
+min_slider.setMinimum(100)
+min_slider.setMaximum(500)
+max_slider.setMinimum(600)
+max_slider.setMaximum(1000)
+
+min_slider.setValue(frequency_min)
+max_slider.setValue(frequency_max)
+
+min_slider.valueChanged.connect(on_slider_changed)
+max_slider.valueChanged.connect(on_slider_changed)
+
+slider_layout.addWidget(min_slider)
+slider_layout.addWidget(max_slider)
+main_layout.addLayout(slider_layout)
+
+on_slider_changed()
+
+layout_plots = pyqtgraph.GraphicsLayoutWidget()
+main_layout.addWidget(layout_plots)
+plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
+curve = plot_spectrum.plot(pen='y')
+peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
+plot_spectrum.addItem(peak_text)
+nextra_frequencies = 5
+peak_texts = []
+for i in range(nextra_frequencies):
+    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
+    plot_spectrum.addItem(peak_texts[i])
+
+plot_spectrum.setLabel('left', 'Magnitude (dB)')
+plot_spectrum.setLabel('bottom', 'Frequency (Hz)')
+
+use_log_frequency = False
+if use_log_frequency:
+    plot_spectrum.setLogMode(x=True, y=False)
+    xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
+    xticks = [[(np.log10(f), str(round(f))) for f in xs]]
+    xticks = np.array(xticks, dtype=object)
+    plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
+    plot_spectrum.getAxis('bottom').setTicks(xticks)
+else:
+    plot_spectrum.setXRange(f0, f1)
+plot_spectrum.setYRange(-50, 0)
+
+last_valid_frequency = None
+last_valid_tension = None
+last_valid_time = QtCore.QTime.currentTime()
+last_update_time = QtCore.QTime.currentTime()
+
+hold_duration = 1000
+min_update_interval = 300
+min_freq_change = 5.0
+
+last_fundamentals = deque(maxlen=3)
+plot_correlation = layout_plots.addPlot(title="Auto Correlation")
+correlation_curve = plot_correlation.plot(pen='g')
+plot_correlation.setLabel('left', "Correlation")
+plot_correlation.setLabel('bottom', 'Lag')
+plot_correlation.setYRange(0, 1)
+plot_correlation.setXRange(min_lag, max_lag)
+
+correlation_lags = np.arange(min_lag, max_lag)
+
+
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
     os.mkfifo(fifo_path)
@@ -279,5 +279,5 @@ idle_sleep = 0.001
 while main_window.isVisible():
     events = poller.poll(poll_timeout)
     if events:
-        update_plot()
+        on_data_available()
     QtWidgets.QApplication.processEvents()
