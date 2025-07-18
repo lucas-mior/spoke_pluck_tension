@@ -98,11 +98,10 @@ curve = plot.plot(pen='y')
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot.addItem(peak_text)
 nextra_frequencies = 5
-peak_text_items = [
-    pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red') for i in range(nextra_frequencies)
-]
-for peak_text_item in peak_text_items:
-    plot.addItem(peak_text_item)
+peak_texts = []
+for i in range(nextra_frequencies):
+    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
+    plot.addItem(peak_texts[i])
 
 plot.setLabel('left', 'Magnitude (dB)')
 plot.setLabel('bottom', 'Frequency (Hz)')
@@ -240,10 +239,10 @@ def update_plot():
             xloc = frequency
             if use_log_frequency:
                 xloc = np.log10(xloc)
-            peak_text_items[i].setPos(xloc, amplitude+i*10)
-            peak_text_items[i].setText(f"{frequency}Hz = {tension}N")
+            peak_texts[i].setPos(xloc, amplitude+i*10)
+            peak_texts[i].setText(f"{frequency}Hz = {tension}N")
         else:
-            peak_text_items[i].setText("")
+            peak_texts[i].setText("")
 
     return
 
