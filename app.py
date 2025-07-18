@@ -116,7 +116,7 @@ def update_plot():
         print("BlockingIO")
         return
 
-    data = np.frombuffer(raw, dtype=np.int16)
+    data = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
     # data = scipy.signal.sosfilt(bandpass, data)
     data = data*np.hanning(len(data))
 
