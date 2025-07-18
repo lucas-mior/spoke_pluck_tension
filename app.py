@@ -169,6 +169,8 @@ def update_plot():
         tension_label.setText("Tension: -- N  (-- kgf)")
         peak_text.setText("")
 
+    return
+
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
