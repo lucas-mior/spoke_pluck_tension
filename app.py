@@ -112,7 +112,8 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
 
     peak_idx = np.argmax(correlation) + min_lag
-    if peak_idx == 0:
+    energy = np.sum(signal**2)
+    if energy < 1 or peak_idx == 0:
         return 0.0
     return sample_rate / peak_idx
 
