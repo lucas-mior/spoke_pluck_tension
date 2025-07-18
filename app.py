@@ -18,7 +18,7 @@ import spokes
 
 sample_rate = 44100
 blocksize = 4096
-alpha = 0.5
+alpha_spectrum = 0.5
 
 tension_min = 200
 tension_max = 2000
@@ -177,7 +177,7 @@ def update_plot():
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smoothed = (1 - alpha)*spectrum_smoothed + alpha*spectrum
+    spectrum_smoothed = (1 - alpha_spectrum)*spectrum_smoothed + alpha_spectrum*spectrum
     spectrum_db = spectrum_smoothed
 
     if max(spectrum_db) > spectrum_max:
