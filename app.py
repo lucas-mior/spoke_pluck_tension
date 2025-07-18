@@ -16,15 +16,14 @@ from collections import deque
 
 import spokes
 
-use_microphone = False
 sample_rate = 44100
 blocksize = 4096
 alpha = 0.5
 
 tension_min = 200
 tension_max = 2000
-frequency_min = round(spokes.frequency(tension_min))
-frequency_max = round(spokes.frequency(tension_max))
+frequency_min = spokes.frequency(tension_min)
+frequency_max = spokes.frequency(tension_max)
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -130,10 +129,7 @@ hold_duration = 1000
 min_update_interval = 300
 min_freq_change = 5.0
 
-max_lag = int(sample_rate / f0)
-min_lag = int(sample_rate / f1)
 last_fundamentals = deque(maxlen=3)
-
 correlation_plot = window.addPlot(title="Autocorrelation")
 correlation_curve = correlation_plot.plot(pen='g')
 correlation_plot.setLabel('left', 'Correlation')
@@ -158,7 +154,8 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     energy = np.sum(signal**2)
     if energy < 1 or peak_idx == 0:
         return 0.0
-    return sample_rate / peak_idx
+    return int(round(sample_rate / peak_idx))
+
 
 def update_plot():
     global last_valid_frequency, last_valid_tension
@@ -219,9 +216,9 @@ def update_plot():
         if use_log_frequency:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_valid_frequency:.0f} Hz = {last_valid_tension:.0f} N")
-        frequency_label.setText(f"Frequency: {last_valid_frequency:.0f} Hz")
-        tension_label.setText(f"Tension: {last_valid_tension:.0f} N  ({kgf:.0f} kgf)")
+        peak_text.setText(f"{last_valid_frequency}Hz = {last_valid_tension}N")
+        frequency_label.setText(f"Frequency: {last_valid_frequency}Hz")
+        tension_label.setText(f"Tension: {last_valid_tension}N  ({kgf}kgf)")
     else:
         frequency_label.setText("Frequency: -- Hz")
         tension_label.setText("Tension: -- N  (-- kgf)")
@@ -234,12 +231,12 @@ def update_plot():
         amplitude = spectrum_db[idx]
         frequency = frequencies[idx]
         if amplitude > 0.005 and frequency_min < frequency < frequency_max:
-            T = spokes.tension(f)
-            xloc = f
+            tension = spokes.tension(frequency)
+            xloc = frequency
             if use_log_frequency:
                 xloc = np.log10(xloc)
             peak_text_items[i].setPos(xloc, amplitude+i*10)
-            peak_text_items[i].setText(f"{f:.0f}Hz = {T:.0f}N")
+            peak_text_items[i].setText(f"{frequency}Hz = {tension}N")
         else:
             peak_text_items[i].setText("")
 

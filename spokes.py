@@ -9,11 +9,11 @@ length0=0.20
 
 
 def tension(frequency, length=length0):
-    return 4*(length**2)*(frequency**2)*mu_steel_2mm
+    return int(round(4*(length**2)*(frequency**2)*mu_steel_2mm))
 
 
 def frequency(tension, length=length0):
-    return np.sqrt(tension / mu_steel_2mm) / (2 * length)
+    return int(round(np.sqrt(tension / mu_steel_2mm) / (2 * length)))
 
 
 if __name__ == "__main__":
