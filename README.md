@@ -25,3 +25,6 @@ Where `length` is the spoke length and `mu_steel` is the longitudinal mass
 density.
 
 ![Frequency x Tension](spoke_tension_frequency.png)
+This graph shows the relation between tension and frequency for spokes of 2mm
+diameter of multiple lengths. The highlighted areas are the typical optimal
+values.
