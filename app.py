@@ -71,7 +71,8 @@ use_log_frequency = False
 if use_log_frequency:
     plot.setLogMode(x=True, y=False)
     xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-    xticks = np.array([[(np.log10(f), str(round(f))) for f in xs]], dtype=object)
+    xticks = [[(np.log10(f), str(round(f))) for f in xs]]
+    xticks = np.array(xticks, dtype=object)
     print(f"{xs=}, ", type(xs), xs.shape)
     plot.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
     plot.getAxis('bottom').setTicks(xticks)
@@ -107,7 +108,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     correlation = correlation[(len(correlation) // 2):]
     correlation[:min_lag] = 0
 
-    correlation /= np.max(np.abs(correlation))
+    correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
     correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
 
