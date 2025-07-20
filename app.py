@@ -18,7 +18,8 @@ pyqtgraph.setConfigOptions(antialias=True)
 
 USE_LOG_FREQUENCY = False
 
-Cfile = open("audio_to_fifo.c")
+Cfile_name = "./audio_to_fifo"
+Cfile = open(f"{Cfile_name}.c")
 for line in Cfile:
     if not line.startswith("#define"):
         continue
@@ -271,7 +272,7 @@ if make_result.returncode != 0:
     print("Build failed. Exiting.")
     exit(1)
 
-fifo_proc = subprocess.Popen(["./audio_to_fifo"])
+fifo_proc = subprocess.Popen([f"{Cfile_name}"])
 fifo_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
 fifo_file = os.fdopen(fifo_fd, 'rb')
 
