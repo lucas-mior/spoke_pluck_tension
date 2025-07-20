@@ -153,15 +153,15 @@ def on_data_available():
             d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
             lag = (p + d) + min_lag
         freq = SAMPLE_RATE / lag
-        fundamentals.append((freq))
+        fundamentals.append(round(freq))
 
     peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
     peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
-    fundamentals_fft = [(frequencies[idx]) for idx in peaks_fft]
+    fundamentals_fft = [round(frequencies[idx]) for idx in peaks_fft]
 
     for i, idx in enumerate(peaks_fft):
         amplitude = spectrum_smooth[idx]
-        frequency = (frequencies[idx])
+        frequency = round(frequencies[idx])
         if amplitude > 0.01:
             xloc = frequency
             if USE_LOG_FREQUENCY:
@@ -198,7 +198,7 @@ def on_data_available():
             last_fundamentals.append(fundamentals[0])
             median_freq = np.median(last_fundamentals)
             tension = spokes.tension(median_freq)
-            last_fundamental = median_freq
+            last_fundamental = round(median_freq)
             last_tension = tension
             last_time = now
             last_update = now
