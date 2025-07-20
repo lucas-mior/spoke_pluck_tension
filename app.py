@@ -32,9 +32,6 @@ for line in Cfile:
         case "FRAMES_PER_BUFFER":
             FRAMES_PER_BUFFER = int(parts[2])
 
-frequency_min = spokes.frequency(spokes.TENSION_MIN)
-frequency_max = spokes.frequency(spokes.TENSION_MAX)
-
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
