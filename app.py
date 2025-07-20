@@ -13,14 +13,17 @@ import subprocess
 import select
 import time
 from collections import deque
+import time
 
 import spokes
 
+USE_LOG_FREQUENCY = False
 SAMPLE_RATE = 44100
 BLOCK_SIZE = 4096
 ALPHA_SPECTRUM = 0.5
 TENSION_MIN = 200
 TENSION_MAX = 2000
+TENSION_AVG = int(round((TENSION_MIN + TENSION_MAX)/2))
 
 frequency_min = spokes.frequency(TENSION_MIN)
 frequency_max = spokes.frequency(TENSION_MAX)
@@ -30,28 +33,56 @@ main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 
-frequency_label = QtWidgets.QLabel("Frequency: -- Hz")
-frequency_label.setStyleSheet("""
+top_indicator = QtWidgets.QLabel("Frequency: -- Hz")
+top_indicator.setStyleSheet("""
     font-size: 22pt;
     color: cyan;
     background-color: black;
 """)
-main_layout.addWidget(frequency_label)
+main_layout.addWidget(top_indicator)
 
-tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
-tension_label.setStyleSheet("""
-    font-size: 22pt;
-    color: orange;
-    background-color: black;
-""")
-main_layout.addWidget(tension_label)
+slider_layout = QtWidgets.QVBoxLayout()
+
+min_label = QtWidgets.QLabel()
+min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+min_slider.setMinimum(TENSION_MIN)
+min_slider.setMaximum(TENSION_AVG)
+min_slider.setValue(int(round((TENSION_MIN + TENSION_AVG)/2)))
+
+max_label = QtWidgets.QLabel()
+max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+max_slider.setMinimum(TENSION_AVG)
+max_slider.setMaximum(TENSION_MAX)
+max_slider.setValue(int(round((TENSION_AVG + TENSION_MAX)/2)))
+
+slider_layout.addWidget(min_label)
+slider_layout.addWidget(max_label)
+slider_layout.addWidget(min_slider)
+slider_layout.addWidget(max_slider)
+main_layout.addLayout(slider_layout)
 
 frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
 
-def detect_fundamental_autocorrelation(signal, SAMPLE_RATE):
+layout_plots = pyqtgraph.GraphicsLayoutWidget()
+plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
+plot_spectrum.setLabel('left', 'Magnitude (dB)')
+plot_spectrum.setLabel('bottom', 'Frequency (Hz)')
+plot_spectrum_curve = plot_spectrum.plot(pen='y')
+peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
+plot_spectrum.addItem(peak_text)
+plot_spectrum.setYRange(-50, 0)
+main_layout.addWidget(layout_plots)
+
+nextra_frequencies = 5
+peak_texts = []
+for i in range(nextra_frequencies):
+    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
+    plot_spectrum.addItem(peak_texts[i])
+
+def detect_fundamental_autocorrelation(signal):
     signal = signal - np.mean(signal)
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[(len(correlation) // 2):]
@@ -59,31 +90,28 @@ def detect_fundamental_autocorrelation(signal, SAMPLE_RATE):
 
     correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
-    correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
+    # correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
 
     peak_idx = np.argmax(correlation) + min_lag
-    # energy = np.sum(signal**2)
-    # if energy < 1 or peak_idx == 0:
-    #     return 0.0
     return int(round(SAMPLE_RATE / peak_idx))
 
-
 def on_data_available():
-    global last_valid_frequency, last_valid_tension
-    global last_valid_time, last_update_time
+    global last_fundamental, last_tension
+    global last_time, last_update
     global spectrum_smooth, spectrum_max
     global last_fundamentals
 
     try:
-        raw = fifo_file.read(BLOCK_SIZE*2)
-        if not raw:
+        signal = fifo_file.read(BLOCK_SIZE*2)
+        if not signal:
             return
     except BlockingIOError:
         print("BlockingIO")
         return
 
-    signal = np.array(np.frombuffer(raw, dtype=np.int16), dtype=np.float64)
-    signal /= np.iinfo(np.int16).max
+    signal = np.frombuffer(signal, dtype=np.int16)
+    signal = np.array(signal, dtype=np.float64)
+    signal = signal / np.iinfo(np.int16).max
     signal = signal*np.hanning(len(signal))
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
@@ -93,16 +121,16 @@ def on_data_available():
     spectrum_db = spectrum_smooth
 
     plot_spectrum.setYRange(0.0, 0.1)
-    curve.setData(frequencies, spectrum_db)
+    plot_spectrum_curve.setData(frequencies, spectrum_db)
 
-    now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorrelation(signal, SAMPLE_RATE)
+    fundamental = detect_fundamental_autocorrelation(signal)
     print(f"{fundamental=}")
 
-    update_allowed = last_update_time.msecsTo(now) > min_update_interval
+    now = int(time.time()*1000)
+    update_allowed = (now - last_update) > min_update_interval
     freq_diff_ok = (
-        last_valid_frequency is None
-        or abs(fundamental - last_valid_frequency) > min_freq_change
+        last_fundamental is None
+        or abs(fundamental - last_fundamental) > min_freq_change
     )
 
     if update_allowed and freq_diff_ok:
@@ -110,31 +138,30 @@ def on_data_available():
             last_fundamentals.append(fundamental)
             median_freq = int(round(np.median(last_fundamentals)))
             tension = spokes.tension(median_freq)
-            last_valid_frequency = median_freq
-            last_valid_tension = tension
-            last_valid_time = now
-            last_update_time = now
+            last_fundamental = median_freq
+            last_tension = tension
+            last_time = now
+            last_update = now
 
-    if last_valid_time.msecsTo(now) > hold_duration:
-        last_valid_frequency = None
-        last_valid_tension = None
+    if (now - last_time) > hold_duration:
+        last_fundamental = None
+        last_tension = None
         last_fundamentals.clear()
 
-    if last_valid_frequency is not None:
-        idx = np.argmin(np.abs(frequencies - last_valid_frequency))
+    if last_fundamental is not None:
+        idx = np.argmin(np.abs(frequencies - last_fundamental))
 
-        xloc = last_valid_frequency
-        if use_log_frequency:
+        xloc = last_fundamental
+        if USE_LOG_FREQUENCY:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_valid_frequency}Hz = {last_valid_tension}N")
+        peak_text.setText(f"{last_fundamental}Hz = {last_tension}N")
 
-        frequency_label.setText(f"Frequency: {last_valid_frequency}Hz")
-        kgf = int(round(last_valid_tension / 9.80665))
-        tension_label.setText(f"Tension: {last_valid_tension}N  ({kgf}kgf)")
+        kgf = int(round(last_tension / 9.80665))
+        indicator_text = f"Frequency: {last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
+        top_indicator.setText(indicator_text)
     else:
-        frequency_label.setText("Frequency: -- Hz")
-        tension_label.setText("Tension: -- N  (-- kgf)")
+        top_indicator.setText("Frequency: -- Hz")
         peak_text.setText("")
 
     peaks = np.argpartition(spectrum_db, -nextra_frequencies)
@@ -146,7 +173,7 @@ def on_data_available():
         if amplitude > 0.005 and frequency_min < frequency < frequency_max:
             tension = spokes.tension(frequency)
             xloc = frequency
-            if use_log_frequency:
+            if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             peak_texts[i].setPos(xloc, amplitude)
             peak_texts[i].setText(f"{frequency}Hz = {tension}N")
@@ -155,12 +182,32 @@ def on_data_available():
 
     return
 
+
+def set_x_range(f0, f1):
+    global plot_spectrum
+
+    print("set_x_range")
+
+    if USE_LOG_FREQUENCY:
+        plot_spectrum.setLogMode(x=True, y=False)
+        xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
+        xticks = [[(np.log10(f), str(round(f))) for f in xs]]
+        xticks = np.array(xticks, dtype=object)
+        plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
+        plot_spectrum.getAxis('bottom').setTicks(xticks)
+    else:
+        plot_spectrum.setXRange(f0, f1)
+    return
+
+
 def on_slider_changed():
-    global frequency_min, frequency_max, f0, f1, min_lag, max_lag
-    global last_valid_frequency, last_valid_tension
-    global last_valid_time, last_update_time
+    global frequency_min, frequency_max, min_lag, max_lag
+    global last_fundamental, last_tension
+    global last_time, last_update
     global spectrum_smooth, spectrum_max
     global last_fundamentals, frequencies
+
+    print("on_slider_changed")
 
     frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=2 / SAMPLE_RATE)
     spectrum_smooth = np.zeros(len(frequencies))
@@ -173,63 +220,24 @@ def on_slider_changed():
     min_lag = int(SAMPLE_RATE / f1)
     max_lag = int(SAMPLE_RATE / f0)
 
+    min_label.setText(f"Min Tension: {min_slider.value()}N")
+    max_label.setText(f"Max Tension: {max_slider.value()}N")
+
+    set_x_range(f0, f1)
     print(f"{frequency_min=} {frequency_max=}")
 
     return
 
-
-slider_layout = QtWidgets.QHBoxLayout()
-min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-
-min_slider.setMinimum(100)
-min_slider.setMaximum(500)
-max_slider.setMinimum(600)
-max_slider.setMaximum(1000)
-
-min_slider.setValue(frequency_min)
-max_slider.setValue(frequency_max)
-
 min_slider.valueChanged.connect(on_slider_changed)
 max_slider.valueChanged.connect(on_slider_changed)
 
-slider_layout.addWidget(min_slider)
-slider_layout.addWidget(max_slider)
-main_layout.addLayout(slider_layout)
-
 on_slider_changed()
 
-layout_plots = pyqtgraph.GraphicsLayoutWidget()
-main_layout.addWidget(layout_plots)
-plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
-curve = plot_spectrum.plot(pen='y')
-peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
-plot_spectrum.addItem(peak_text)
-nextra_frequencies = 5
-peak_texts = []
-for i in range(nextra_frequencies):
-    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
-    plot_spectrum.addItem(peak_texts[i])
 
-plot_spectrum.setLabel('left', 'Magnitude (dB)')
-plot_spectrum.setLabel('bottom', 'Frequency (Hz)')
-
-use_log_frequency = False
-if use_log_frequency:
-    plot_spectrum.setLogMode(x=True, y=False)
-    xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-    xticks = [[(np.log10(f), str(round(f))) for f in xs]]
-    xticks = np.array(xticks, dtype=object)
-    plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
-    plot_spectrum.getAxis('bottom').setTicks(xticks)
-else:
-    plot_spectrum.setXRange(f0, f1)
-plot_spectrum.setYRange(-50, 0)
-
-last_valid_frequency = None
-last_valid_tension = None
-last_valid_time = QtCore.QTime.currentTime()
-last_update_time = QtCore.QTime.currentTime()
+last_fundamental = None
+last_tension = None
+last_time = int(time.time()*1000)
+last_update = int(time.time()*1000)
 
 hold_duration = 1000
 min_update_interval = 300
@@ -244,7 +252,6 @@ plot_correlation.setYRange(0, 1)
 plot_correlation.setXRange(min_lag, max_lag)
 
 correlation_lags = np.arange(min_lag, max_lag)
-
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
