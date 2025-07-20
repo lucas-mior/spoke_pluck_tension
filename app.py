@@ -183,12 +183,11 @@ def on_data_available():
         amplitude = spectrum_smooth[idx]
         frequency = int(round(frequencies[idx]))
         if amplitude > 0.01:
-            tension = spokes.tension(frequency)
             xloc = frequency
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency}Hz = {tension}N")
+            peak_texts[i].setText(f"{frequency}Hz")
         else:
             peak_texts[i].setText("")
 
