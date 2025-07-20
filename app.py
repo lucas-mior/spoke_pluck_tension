@@ -8,12 +8,12 @@ import soundfile as sf
 import pyqtgraph
 from pyqtgraph.Qt import QtCore, QtWidgets
 from PyQt6.QtCore import Qt
-import scipy
 import subprocess
 import select
 import time
 from collections import deque
 import time
+from scipy.signal import find_peaks
 
 import spokes
 
@@ -21,7 +21,7 @@ USE_LOG_FREQUENCY = False
 SAMPLE_RATE = 44100
 BLOCK_SIZE = 4096
 ALPHA_SPECTRUM = 0.5
-TENSION_MIN = 200
+TENSION_MIN = 100
 TENSION_MAX = 2000
 TENSION_AVG = int(round((TENSION_MIN + TENSION_MAX)/2))
 
@@ -47,7 +47,7 @@ min_label = QtWidgets.QLabel()
 min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 min_slider.setMinimum(TENSION_MIN)
 min_slider.setMaximum(TENSION_AVG)
-min_slider.setValue(int(round((TENSION_MIN + TENSION_AVG)/2)))
+min_slider.setValue(TENSION_MIN)
 
 min_slider_layout = QtWidgets.QHBoxLayout()
 min_slider_layout.addWidget(min_label)
@@ -57,7 +57,7 @@ max_label = QtWidgets.QLabel()
 max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 max_slider.setMinimum(TENSION_AVG)
 max_slider.setMaximum(TENSION_MAX)
-max_slider.setValue(int(round((TENSION_AVG + TENSION_MAX)/2)))
+max_slider.setValue(TENSION_MAX)
 
 max_slider_layout = QtWidgets.QHBoxLayout()
 max_slider_layout.addWidget(max_label)
@@ -81,7 +81,7 @@ plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(-50, 0)
 main_layout.addWidget(layout_plots)
 
-nextra_frequencies = 5
+nextra_frequencies = 10
 peak_texts = []
 for i in range(nextra_frequencies):
     peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
@@ -96,8 +96,10 @@ def detect_fundamental_autocorrelation(signal):
     correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
 
-    peak_idx = np.argmax(correlation) + min_lag
-    return int(round(SAMPLE_RATE / peak_idx))
+    peaks, _ = find_peaks(correlation, distance=5)
+    top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
+    top_peaks = [p + min_lag for p in top_peaks]
+    return [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
 
 def on_data_available():
     global last_fundamental, last_tension
@@ -127,8 +129,7 @@ def on_data_available():
     plot_spectrum.setYRange(0.0, 0.1)
     plot_spectrum_curve.setData(frequencies, spectrum_db)
 
-    fundamental = detect_fundamental_autocorrelation(signal)
-    print(f"{fundamental=}")
+    possible_fundamentals = detect_fundamental_autocorrelation(signal)
 
     now = int(time.time()*1000)
     update_allowed = (now - last_update) > min_update_interval
@@ -168,13 +169,13 @@ def on_data_available():
         top_indicator.setText("Frequency: -- Hz")
         peak_text.setText("")
 
-    peaks = np.argpartition(spectrum_db, -nextra_frequencies)
-    peaks = peaks[-nextra_frequencies:]
-    peaks = peaks[np.argsort(-spectrum_db[peaks])]
+    peaks, _ = find_peaks(spectrum_smooth)
+    peaks = peaks[np.argsort(-spectrum_smooth[peaks])]
+    peaks = peaks[:nextra_frequencies]
     for i, idx in enumerate(peaks):
-        amplitude = spectrum_db[idx]
+        amplitude = spectrum_smooth[idx]
         frequency = int(round(frequencies[idx]))
-        if amplitude > 0.005 and frequency_min < frequency < frequency_max:
+        if amplitude > 0.01:
             tension = spokes.tension(frequency)
             xloc = frequency
             if USE_LOG_FREQUENCY:
