@@ -41,7 +41,7 @@ slider_layout = QtWidgets.QVBoxLayout()
 min_label = QtWidgets.QLabel()
 min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 min_slider.setMinimum(spokes.TENSION_MIN)
-min_slider.setMaximum(TENSION_AVG)
+min_slider.setMaximum(spokes.TENSION_AVG)
 min_slider.setValue(spokes.TENSION_MIN)
 
 min_slider_layout = QtWidgets.QHBoxLayout()
@@ -50,7 +50,7 @@ min_slider_layout.addWidget(min_slider)
 
 max_label = QtWidgets.QLabel()
 max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-max_slider.setMinimum(TENSION_AVG)
+max_slider.setMinimum(spokes.TENSION_AVG)
 max_slider.setMaximum(spokes.TENSION_MAX)
 max_slider.setValue(spokes.TENSION_MAX)
 
@@ -221,7 +221,7 @@ def on_slider_changed():
 
     frequency_min = spokes.frequency(min_slider.value())
     frequency_max = spokes.frequency(max_slider.value())
-    f0 = frequency_min/2
+    f0 = frequency_min
     f1 = frequency_max*2
     min_lag = round(SAMPLE_RATE / f1)
     max_lag = round(SAMPLE_RATE / f0)

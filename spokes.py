@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-TENSION_MIN = 200
+TENSION_MIN = 400
 TENSION_MAX = 2000
 TENSION_AVG = round((TENSION_MIN + TENSION_MAX)/2)
 
