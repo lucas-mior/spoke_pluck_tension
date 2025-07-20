@@ -20,9 +20,9 @@ USE_LOG_FREQUENCY = False
 SAMPLE_RATE = 44100
 BLOCK_SIZE = 4096
 ALPHA_SPECTRUM = 0.5
-TENSION_MIN = 100
+TENSION_MIN = 200
 TENSION_MAX = 2000
-TENSION_AVG = int(round((TENSION_MIN + TENSION_MAX)/2))
+TENSION_AVG = round((TENSION_MIN + TENSION_MAX)/2)
 
 frequency_min = spokes.frequency(TENSION_MIN)
 frequency_max = spokes.frequency(TENSION_MAX)
@@ -143,23 +143,23 @@ def on_data_available():
             d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
             lag = (p + d) + min_lag
         freq = SAMPLE_RATE / lag
-        fundamentals.append(int(round(freq)))
+        fundamentals.append((freq))
 
     peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
     peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
-    fundamentals_fft = [int(round(frequencies[idx])) for idx in peaks_fft]
+    fundamentals_fft = [(frequencies[idx]) for idx in peaks_fft]
 
     print(f"{fundamentals[0]=} {fundamentals_fft[0]=}")
 
     for i, idx in enumerate(peaks_fft):
         amplitude = spectrum_smooth[idx]
-        frequency = int(round(frequencies[idx]))
+        frequency = (frequencies[idx])
         if amplitude > 0.01:
             xloc = frequency
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency}Hz")
+            peak_texts[i].setText(f"{frequency:.1f}Hz")
         else:
             peak_texts[i].setText("")
 
@@ -172,7 +172,7 @@ def on_data_available():
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             correlation_texts[i].setPos(xloc, amplitude)
-            correlation_texts[i].setText(f"{frequency}Hz")
+            correlation_texts[i].setText(f"{frequency:.1f}Hz")
         else:
             correlation_texts[i].setText("")
 
@@ -187,7 +187,7 @@ def on_data_available():
     if update_allowed and freq_diff_ok:
         if frequency_min < fundamentals[0] < frequency_max:
             last_fundamentals.append(fundamentals[0])
-            median_freq = int(round(np.median(last_fundamentals)))
+            median_freq = np.median(last_fundamentals)
             tension = spokes.tension(median_freq)
             last_fundamental = median_freq
             last_tension = tension
@@ -206,10 +206,10 @@ def on_data_available():
         if USE_LOG_FREQUENCY:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_fundamental}Hz = {last_tension}N")
+        peak_text.setText(f"{last_fundamental:.1f}Hz = {last_tension}N")
 
-        kgf = int(round(last_tension / 9.80665))
-        indicator_text = f"{last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
+        kgf = round(last_tension / 9.80665)
+        indicator_text = f"{last_fundamental:.1f}Hz -> {last_tension}N = {kgf}kgf"
         top_indicator.setText(indicator_text)
     else:
         top_indicator.setText("Frequency: -- Hz")
