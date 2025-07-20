@@ -145,19 +145,18 @@ def on_data_available():
     correlation = correlation[min_lag:max_lag]
 
     peaks, _ = scipy.signal.find_peaks(correlation)
-    if len(peaks) == 0:
-        return
-    top_peaks = peaks[np.argsort(-correlation[peaks])[:nextra_frequencies]]
     fundamentals = []
-    for p in top_peaks:
-        if p <= 0 or p >= len(correlation) - 1:
-            lag = p + min_lag
-        else:
-            y0, y1, y2 = correlation[p - 1], correlation[p], correlation[p + 1]
-            d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
-            lag = (p + d) + min_lag
-        freq = SAMPLE_RATE / lag
-        fundamentals.append(round(freq))
+    if len(peaks) > 0:
+        top_peaks = peaks[np.argsort(-correlation[peaks])[:nextra_frequencies]]
+        for p in top_peaks:
+            if p <= 0 or p >= len(correlation) - 1:
+                lag = p + min_lag
+            else:
+                y0, y1, y2 = correlation[p - 1], correlation[p], correlation[p + 1]
+                d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
+                lag = (p + d) + min_lag
+            freq = SAMPLE_RATE / lag
+            fundamentals.append(round(freq))
 
     for i in range(nextra_frequencies):
         if i < len(fundamentals):
@@ -172,15 +171,18 @@ def on_data_available():
         else:
             correlation_texts[i].setText("")
 
-        idx = peaks_fft[i]
-        amplitude = spectrum_smooth[idx]
-        frequency = round(frequencies[idx])
-        if amplitude > 0.01:
-            xloc = frequency
-            if USE_LOG_FREQUENCY:
-                xloc = np.log10(xloc)
-            peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency}Hz")
+        if i < len(peaks_fft):
+            idx = peaks_fft[i]
+            amplitude = spectrum_smooth[idx]
+            frequency = round(frequencies[idx])
+            if amplitude > 0.01:
+                xloc = frequency
+                if USE_LOG_FREQUENCY:
+                    xloc = np.log10(xloc)
+                peak_texts[i].setPos(xloc, amplitude)
+                peak_texts[i].setText(f"{frequency}Hz")
+            else:
+                peak_texts[i].setText("")
         else:
             peak_texts[i].setText("")
 
