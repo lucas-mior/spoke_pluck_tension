@@ -187,25 +187,11 @@ def on_data_available():
     return
 
 
-def set_x_range(f0, f1):
-    global plot_spectrum
-    if USE_LOG_FREQUENCY:
-        plot_spectrum.setLogMode(x=True, y=False)
-        xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-        xticks = [[(np.log10(f), str(round(f))) for f in xs]]
-        xticks = np.array(xticks, dtype=object)
-        plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
-        plot_spectrum.getAxis('bottom').setTicks(xticks)
-    else:
-        plot_spectrum.setXRange(f0, f1)
-    return
-
-
 def on_slider_changed():
     global frequency_min, frequency_max, min_lag, max_lag
     global last_fundamental, last_tension
     global last_time, last_update
-    global last_fundamentals
+    global last_fundamentals, plot_spectrum
 
     frequency_min = spokes.frequency(min_slider.value())
     frequency_max = spokes.frequency(max_slider.value())
@@ -217,8 +203,16 @@ def on_slider_changed():
     min_label.setText(f"Min Tension: {min_slider.value()}N")
     max_label.setText(f"Max Tension: {max_slider.value()}N")
 
-    set_x_range(f0, f1)
-    print(f"{frequency_min=} {frequency_max=}")
+    if USE_LOG_FREQUENCY:
+        plot_spectrum.setLogMode(x=True, y=False)
+        xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
+        xticks = [[(np.log10(f), str(round(f))) for f in xs]]
+        xticks = np.array(xticks, dtype=object)
+        plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
+        plot_spectrum.getAxis('bottom').setTicks(xticks)
+    else:
+        plot_spectrum.setXRange(f0, f1)
+    return
 
     return
 
