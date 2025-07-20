@@ -17,8 +17,19 @@ import spokes
 pyqtgraph.setConfigOptions(antialias=True)
 
 USE_LOG_FREQUENCY = False
-SAMPLE_RATE = 44100
-BLOCK_SIZE = 4096
+
+Cfile = open("audio_to_fifo.c")
+for line in Cfile:
+    if not line.startswith("#define"):
+        continue
+    parts = line.split()
+    print("parts:", parts)
+    match parts[1]:
+        case "SAMPLE_RATE":
+            SAMPLE_RATE = int(parts[2])
+        case "FRAMES_PER_BUFFER":
+            FRAMES_PER_BUFFER = int(parts[2])
+
 ALPHA_SPECTRUM = 0.5
 
 frequency_min = spokes.frequency(spokes.TENSION_MIN)
@@ -64,7 +75,7 @@ slider_layout.addLayout(max_slider_layout)
 
 main_layout.addLayout(slider_layout)
 
-frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
+frequencies = np.fft.rfftfreq(FRAMES_PER_BUFFER, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
@@ -97,7 +108,7 @@ def on_data_available():
     global last_fundamentals
 
     try:
-        signal = fifo_file.read(BLOCK_SIZE*2)
+        signal = fifo_file.read(FRAMES_PER_BUFFER*2)
         if not signal:
             return
     except BlockingIOError:
