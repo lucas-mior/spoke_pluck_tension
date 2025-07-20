@@ -33,7 +33,6 @@ if __name__ == "__main__":
         freq_values = frequency(tension_values, length)
         line, = plt.plot(tension_values, freq_values, label=f'{length:.2f} m')
 
-        # Same color as line
         color = line.get_color()
 
         fmin = frequency(acceptable_tension_min, length)
