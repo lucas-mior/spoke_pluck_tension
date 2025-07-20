@@ -281,11 +281,8 @@ main_window.show()
 poller = select.poll()
 poller.register(fifo_fd, select.POLLIN)
 
-poll_timeout = 1000
-idle_sleep = 0.001
-
 while main_window.isVisible():
-    events = poller.poll(poll_timeout)
+    events = poller.poll(1000)
     if events:
         on_data_available()
     QtWidgets.QApplication.processEvents()
