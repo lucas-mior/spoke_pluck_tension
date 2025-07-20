@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+TENSION_MIN = 200
+TENSION_MAX = 2000
+TENSION_AVG = round((TENSION_MIN + TENSION_MAX)/2)
+
 STEEL_DENSITY = 7930  # kg/m³
 SPOKE_DIAMETER = 0.002  # meters
 SPOKE_CROSS_SECTION = np.pi*(SPOKE_DIAMETER / 2)**2

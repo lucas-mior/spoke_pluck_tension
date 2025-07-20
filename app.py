@@ -19,12 +19,9 @@ USE_LOG_FREQUENCY = False
 SAMPLE_RATE = 44100
 BLOCK_SIZE = 4096
 ALPHA_SPECTRUM = 0.5
-TENSION_MIN = 200
-TENSION_MAX = 2000
-TENSION_AVG = round((TENSION_MIN + TENSION_MAX)/2)
 
-frequency_min = spokes.frequency(TENSION_MIN)
-frequency_max = spokes.frequency(TENSION_MAX)
+frequency_min = spokes.frequency(spokes.TENSION_MIN)
+frequency_max = spokes.frequency(spokes.TENSION_MAX)
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -43,9 +40,9 @@ slider_layout = QtWidgets.QVBoxLayout()
 
 min_label = QtWidgets.QLabel()
 min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
-min_slider.setMinimum(TENSION_MIN)
+min_slider.setMinimum(spokes.TENSION_MIN)
 min_slider.setMaximum(TENSION_AVG)
-min_slider.setValue(TENSION_MIN)
+min_slider.setValue(spokes.TENSION_MIN)
 
 min_slider_layout = QtWidgets.QHBoxLayout()
 min_slider_layout.addWidget(min_label)
@@ -54,8 +51,8 @@ min_slider_layout.addWidget(min_slider)
 max_label = QtWidgets.QLabel()
 max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 max_slider.setMinimum(TENSION_AVG)
-max_slider.setMaximum(TENSION_MAX)
-max_slider.setValue(TENSION_MAX)
+max_slider.setMaximum(spokes.TENSION_MAX)
+max_slider.setValue(spokes.TENSION_MAX)
 
 max_slider_layout = QtWidgets.QHBoxLayout()
 max_slider_layout.addWidget(max_label)
