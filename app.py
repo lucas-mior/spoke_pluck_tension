@@ -93,20 +93,6 @@ for i in range(nextra_frequencies):
     correlation_texts.append(text_item)
     plot_spectrum.addItem(correlation_texts[i])
 
-def detect_fundamental_autocorrelation(signal):
-    signal = signal - np.mean(signal)
-    correlation = np.correlate(signal, signal, mode='full')
-    correlation = correlation[(len(correlation) // 2):]
-    correlation[:min_lag] = 0
-
-    correlation /= np.max(correlation)
-    correlation = correlation[min_lag:max_lag]
-
-    peaks, _ = scipy.signal.find_peaks(correlation)
-    top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
-    top_peaks = [p + min_lag for p in top_peaks]
-    return [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
-
 def on_data_available():
     global last_fundamental, last_tension
     global last_time, last_update
@@ -125,6 +111,7 @@ def on_data_available():
     signal = np.array(signal, dtype=np.float64)
     signal = signal / np.iinfo(np.int16).max
     signal = signal*np.hanning(len(signal))
+    signal = signal - np.mean(signal)
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
@@ -134,7 +121,18 @@ def on_data_available():
     plot_spectrum.setYRange(0.0, 0.1)
     plot_spectrum_curve.setData(frequencies, spectrum_db)
 
-    fundamentals = detect_fundamental_autocorrelation(signal)
+    correlation = np.correlate(signal, signal, mode='full')
+    correlation = correlation[(len(correlation) // 2):]
+    correlation[:min_lag] = 0
+
+    correlation /= np.max(correlation)
+    correlation = correlation[min_lag:max_lag]
+
+    peaks, _ = scipy.signal.find_peaks(correlation)
+    top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
+    top_peaks = [p + min_lag for p in top_peaks]
+    fundamentals = [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
+
     if len(fundamentals) == 0:
         return
     peaks, _ = scipy.signal.find_peaks(spectrum_smooth)
