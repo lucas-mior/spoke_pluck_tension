@@ -72,7 +72,6 @@ frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
-
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
 plot_spectrum.setLabel('left', 'Magnitude (dB)')
@@ -235,7 +234,6 @@ min_slider.valueChanged.connect(on_slider_changed)
 max_slider.valueChanged.connect(on_slider_changed)
 
 on_slider_changed()
-
 
 last_fundamental = None
 last_tension = None
