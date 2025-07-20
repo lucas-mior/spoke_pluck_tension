@@ -133,17 +133,17 @@ def on_data_available():
     peaks, _ = scipy.signal.find_peaks(correlation)
     if len(peaks) == 0:
         return
-    top = peaks[np.argmax(correlation[peaks])]
-    p = top
-    if p <= 0 or p >= len(correlation)-1:
-        lag = p + min_lag
-    else:
-        y0, y1, y2 = correlation[p-1], correlation[p], correlation[p+1]
-        d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
-        lag = (p + d) + min_lag
-
-    fundamental = SAMPLE_RATE / lag
-    fundamentals = [int(round(fundamental))]
+    top_peaks = peaks[np.argsort(-correlation[peaks])[:nextra_frequencies]]
+    fundamentals = []
+    for p in top_peaks:
+        if p <= 0 or p >= len(correlation) - 1:
+            lag = p + min_lag
+        else:
+            y0, y1, y2 = correlation[p - 1], correlation[p], correlation[p + 1]
+            d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
+            lag = (p + d) + min_lag
+        freq = SAMPLE_RATE / lag
+        fundamentals.append(int(round(freq)))
 
     peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
     peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
