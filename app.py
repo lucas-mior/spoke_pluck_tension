@@ -194,14 +194,14 @@ def on_data_available():
 
     for i in range(3):
         if i < len(fundamentals):
-            f = fundamentals[i]
-            idx = np.argmin(np.abs(frequencies - f))
-            amp = spectrum_db[idx]
-            xloc = f
+            frequency = fundamentals[i]
+            idx = np.argmin(np.abs(frequencies - frequency))
+            amplitude = spectrum_smooth[idx]
+            xloc = frequency
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
-            correlation_texts[i].setPos(xloc, amp)
-            correlation_texts[i].setText(f"{f}Hz")
+            correlation_texts[i].setPos(xloc, amplitude)
+            correlation_texts[i].setText(f"{frequency}Hz")
         else:
             correlation_texts[i].setText("")
 
