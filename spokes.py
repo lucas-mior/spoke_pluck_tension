@@ -9,14 +9,14 @@ STEEL_DENSITY = 7930  # kg/m³
 SPOKE_DIAMETER = 0.002  # meters
 SPOKE_CROSS_SECTION = np.pi*(SPOKE_DIAMETER / 2)**2
 MU_STEEL_2mm = STEEL_DENSITY*SPOKE_CROSS_SECTION
-LENGTH_DEFAULT=0.20
+SPOKE_LENGTH=0.20
 
 
-def tension(frequency, length=LENGTH_DEFAULT):
+def tension(frequency, length=SPOKE_LENGTH):
     return int(round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
 
 
-def frequency(tension, length=LENGTH_DEFAULT):
+def frequency(tension, length=SPOKE_LENGTH):
     return int(round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
 
 
