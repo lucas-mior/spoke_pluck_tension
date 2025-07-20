@@ -12,7 +12,6 @@ import subprocess
 import select
 import time
 from collections import deque
-import time
 from scipy.signal import find_peaks
 
 import spokes
@@ -41,7 +40,7 @@ top_indicator.setStyleSheet("""
 """)
 main_layout.addWidget(top_indicator)
 
-slider_layout = QtWidgets.QHBoxLayout()
+slider_layout = QtWidgets.QVBoxLayout()
 
 min_label = QtWidgets.QLabel()
 min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
@@ -84,8 +83,15 @@ main_layout.addWidget(layout_plots)
 nextra_frequencies = 10
 peak_texts = []
 for i in range(nextra_frequencies):
-    peak_texts.append(pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red'))
+    text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
+    peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
+
+correlation_texts = []
+for i in range(3):
+    text_item = pyqtgraph.TextItem('',anchor=(0.5, -0.5), color='green')
+    correlation_texts.append(text_item)
+    plot_spectrum.addItem(correlation_texts[i])
 
 def detect_fundamental_autocorrelation(signal):
     signal = signal - np.mean(signal)
@@ -96,7 +102,7 @@ def detect_fundamental_autocorrelation(signal):
     correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
 
-    peaks, _ = find_peaks(correlation, distance=5)
+    peaks, _ = find_peaks(correlation)
     top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
     top_peaks = [p + min_lag for p in top_peaks]
     return [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
@@ -122,25 +128,26 @@ def on_data_available():
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth \
-            + ALPHA_SPECTRUM*spectrum
+    spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth + ALPHA_SPECTRUM*spectrum
     spectrum_db = spectrum_smooth
 
     plot_spectrum.setYRange(0.0, 0.1)
     plot_spectrum_curve.setData(frequencies, spectrum_db)
 
-    possible_fundamentals = detect_fundamental_autocorrelation(signal)
+    fundamentals = detect_fundamental_autocorrelation(signal)
+    if len(fundamentals) == 0:
+        return
 
     now = int(time.time()*1000)
     update_allowed = (now - last_update) > min_update_interval
     freq_diff_ok = (
         last_fundamental is None
-        or abs(fundamental - last_fundamental) > min_freq_change
+        or abs(fundamentals[0] - last_fundamental) > min_freq_change
     )
 
     if update_allowed and freq_diff_ok:
-        if frequency_min < fundamental < frequency_max:
-            last_fundamentals.append(fundamental)
+        if frequency_min < fundamentals[0] < frequency_max:
+            last_fundamentals.append(fundamentals[0])
             median_freq = int(round(np.median(last_fundamentals)))
             tension = spokes.tension(median_freq)
             last_fundamental = median_freq
@@ -185,8 +192,20 @@ def on_data_available():
         else:
             peak_texts[i].setText("")
 
-    return
+    for i in range(3):
+        if i < len(fundamentals):
+            f = fundamentals[i]
+            idx = np.argmin(np.abs(frequencies - f))
+            amp = spectrum_db[idx]
+            xloc = f
+            if USE_LOG_FREQUENCY:
+                xloc = np.log10(xloc)
+            correlation_texts[i].setPos(xloc, amp)
+            correlation_texts[i].setText(f"{f}Hz")
+        else:
+            correlation_texts[i].setText("")
 
+    return
 
 def on_slider_changed():
     global frequency_min, frequency_max
@@ -212,8 +231,6 @@ def on_slider_changed():
         plot_spectrum.getAxis('bottom').setTicks(xticks)
     else:
         plot_spectrum.setXRange(f0, f1)
-    return
-
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
