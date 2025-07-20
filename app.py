@@ -220,8 +220,8 @@ def on_slider_changed():
     frequency_max = spokes.frequency(max_slider.value())
     f0 = frequency_min/2
     f1 = frequency_max*4
-    min_lag = int(SAMPLE_RATE / f1)
-    max_lag = int(SAMPLE_RATE / f0)
+    min_lag = round(SAMPLE_RATE / f1)
+    max_lag = round(SAMPLE_RATE / f0)
 
     min_label.setText(f"Min Tension: {min_slider.value()}N")
     max_label.setText(f"Max Tension: {max_slider.value()}N")
