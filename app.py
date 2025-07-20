@@ -63,9 +63,9 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
 
     peak_idx = np.argmax(correlation) + min_lag
-    energy = np.sum(signal**2)
-    if energy < 1 or peak_idx == 0:
-        return 0.0
+    # energy = np.sum(signal**2)
+    # if energy < 1 or peak_idx == 0:
+    #     return 0.0
     return int(round(sample_rate / peak_idx))
 
 
@@ -92,11 +92,7 @@ def on_data_available():
     spectrum_smooth = (1 - alpha_spectrum)*spectrum_smooth + alpha_spectrum*spectrum
     spectrum_db = spectrum_smooth
 
-    if max(spectrum_smooth) > spectrum_max:
-        spectrum_max = max(spectrum_smooth)
-    if spectrum_max > 4*max(spectrum_smooth):
-        spectrum_max = max(spectrum_smooth)
-    plot_spectrum.setYRange(0.0, spectrum_max)
+    plot_spectrum.setYRange(0.0, 0.1)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
@@ -152,7 +148,7 @@ def on_data_available():
             xloc = frequency
             if use_log_frequency:
                 xloc = np.log10(xloc)
-            peak_texts[i].setPos(xloc, amplitude+i*10)
+            peak_texts[i].setPos(xloc, amplitude)
             peak_texts[i].setText(f"{frequency}Hz = {tension}N")
         else:
             peak_texts[i].setText("")
