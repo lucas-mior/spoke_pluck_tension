@@ -86,7 +86,7 @@ main_layout.addWidget(layout_plots)
 peak_texts = []
 correlation_texts = []
 
-nextra_frequencies = 3
+nextra_frequencies = 5
 for i in range(nextra_frequencies):
     text_item = pyqtgraph.TextItem('',anchor=(0.5, 2.5), color='green')
     correlation_texts.append(text_item)
@@ -176,7 +176,6 @@ def on_data_available():
         else:
             correlation_texts[i].setText("")
 
-
     now = int(time.time()*1000)
     update_allowed = (now - last_update) > min_update_interval
     freq_diff_ok = (
@@ -184,7 +183,9 @@ def on_data_available():
         or abs(fundamentals[0] - last_fundamental) > min_freq_change
     )
 
-    if update_allowed and freq_diff_ok:
+    fft_match = any(abs(fundamentals[0] - f) < 5 for f in fundamentals_fft)
+
+    if update_allowed and freq_diff_ok and fft_match:
         if frequency_min < fundamentals[0] < frequency_max:
             last_fundamentals.append(fundamentals[0])
             median_freq = np.median(last_fundamentals)
@@ -225,7 +226,7 @@ def on_slider_changed():
     frequency_min = spokes.frequency(min_slider.value())
     frequency_max = spokes.frequency(max_slider.value())
     f0 = frequency_min/2
-    f1 = frequency_max*4
+    f1 = frequency_max*2
     min_lag = round(SAMPLE_RATE / f1)
     max_lag = round(SAMPLE_RATE / f0)
 
