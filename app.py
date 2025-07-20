@@ -188,10 +188,9 @@ def on_data_available():
 
 
 def on_slider_changed():
-    global frequency_min, frequency_max, min_lag, max_lag
-    global last_fundamental, last_tension
-    global last_time, last_update
-    global last_fundamentals, plot_spectrum
+    global frequency_min, frequency_max
+    global min_lag, max_lag
+    global plot_spectrum
 
     frequency_min = spokes.frequency(min_slider.value())
     frequency_max = spokes.frequency(max_slider.value())
