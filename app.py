@@ -88,7 +88,7 @@ plot_spectrum_curve = plot_spectrum.plot(
 )
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 plot_spectrum.addItem(peak_text)
-plot_spectrum.setYRange(-50, 0)
+plot_spectrum.setYRange(0, 0.1)
 main_layout.addWidget(layout_plots)
 
 peak_texts = []
@@ -128,7 +128,6 @@ def on_data_available():
     spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth + ALPHA_SPECTRUM*spectrum
     spectrum_db = spectrum_smooth
 
-    plot_spectrum.setYRange(0.0, 0.1)
     plot_spectrum_curve.setData(frequencies, spectrum_db)
 
     correlation = np.correlate(signal, signal, mode='full')
