@@ -88,6 +88,7 @@ plot_spectrum_curve = plot_spectrum.plot(
     pen=pyqtgraph.mkPen('y', width=3, join=Qt.PenJoinStyle.RoundJoin)
 )
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
+peak_text.setFont(QFont('LiberationSans', 18))
 plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(0, 0.1)
 main_layout.addWidget(layout_plots)
