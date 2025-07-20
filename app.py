@@ -145,8 +145,6 @@ def on_data_available():
     peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
     fundamentals_fft = [(frequencies[idx]) for idx in peaks_fft]
 
-    print(f"{fundamentals[0]=:.1f} {fundamentals_fft[0]=:.1f}")
-
     for i, idx in enumerate(peaks_fft):
         amplitude = spectrum_smooth[idx]
         frequency = (frequencies[idx])
