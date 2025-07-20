@@ -207,11 +207,10 @@ def on_slider_changed():
     global last_fundamental, last_tension
     global last_time, last_update
     global spectrum_smooth, spectrum_max
-    global last_fundamentals, frequencies
+    global last_fundamentals
 
     print("on_slider_changed")
 
-    frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=2 / SAMPLE_RATE)
     spectrum_smooth = np.zeros(len(frequencies))
     spectrum_max = 0
 
