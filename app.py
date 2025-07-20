@@ -107,7 +107,6 @@ def on_data_available():
         if not signal:
             return
     except BlockingIOError:
-        print("BlockingIO")
         return
 
     signal = np.frombuffer(signal, dtype=np.int16)
@@ -132,20 +131,27 @@ def on_data_available():
     correlation = correlation[min_lag:max_lag]
 
     peaks, _ = scipy.signal.find_peaks(correlation)
-    top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
-    top_peaks = [p + min_lag for p in top_peaks]
-    fundamentals = [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
-
-    if len(fundamentals) == 0:
+    if len(peaks) == 0:
         return
-    peaks, _ = scipy.signal.find_peaks(spectrum_smooth)
-    peaks = peaks[np.argsort(-spectrum_smooth[peaks])]
-    peaks = peaks[:nextra_frequencies]
-    fundamentals_fft = [int(round(frequencies[idx])) for idx in peaks]
+    top = peaks[np.argmax(correlation[peaks])]
+    p = top
+    if p <= 0 or p >= len(correlation)-1:
+        lag = p + min_lag
+    else:
+        y0, y1, y2 = correlation[p-1], correlation[p], correlation[p+1]
+        d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
+        lag = (p + d) + min_lag
+
+    fundamental = SAMPLE_RATE / lag
+    fundamentals = [int(round(fundamental))]
+
+    peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
+    peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
+    fundamentals_fft = [int(round(frequencies[idx])) for idx in peaks_fft]
 
     print(f"{fundamentals[0]=} {fundamentals_fft[0]=}")
 
-    for i, idx in enumerate(peaks):
+    for i, idx in enumerate(peaks_fft):
         amplitude = spectrum_smooth[idx]
         frequency = int(round(frequencies[idx]))
         if amplitude > 0.01:
