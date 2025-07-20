@@ -4,9 +4,8 @@ import os
 import atexit
 import queue
 import numpy as np
-import soundfile as sf
 import pyqtgraph
-from pyqtgraph.Qt import QtCore, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 from PyQt6.QtCore import Qt
 import subprocess
 import select
