@@ -72,8 +72,6 @@ top_indicator.setStyleSheet("""
 """)
 main_layout.addWidget(top_indicator)
 
-frequencies = np.fft.rfftfreq(FRAMES_PER_BUFFER, d=1 / SAMPLE_RATE)
-spectrum_smooth = np.zeros(len(frequencies))
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
@@ -105,10 +103,15 @@ for i in range(nextra_frequencies):
 
 
 def on_data_available():
-    global last_fundamental, last_tension
-    global last_time, last_update
-    global spectrum_smooth
-    global last_fundamentals
+    f = on_data_available
+    if not hasattr(f, "spectrum_smooth"):
+        f.frequencies = np.fft.rfftfreq(FRAMES_PER_BUFFER, d=1 / SAMPLE_RATE)
+        f.spectrum_smooth = np.zeros(len(f.frequencies))
+        f.last_fundamental = None
+        f.last_tension = None
+        f.last_time = time.time()*1000
+        f.last_update = time.time()*1000
+        f.last_fundamentals = collections.deque(maxlen=6)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -125,14 +128,14 @@ def on_data_available():
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth + ALPHA_SPECTRUM*spectrum
-    spectrum_db = spectrum_smooth
+    f.spectrum_smooth = (1 - ALPHA_SPECTRUM)*f.spectrum_smooth + ALPHA_SPECTRUM*spectrum
+    spectrum_db = f.spectrum_smooth
 
-    peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
-    peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
-    fundamentals_fft = [round(frequencies[idx]) for idx in peaks_fft]
+    peaks_fft, _ = scipy.signal.find_peaks(f.spectrum_smooth)
+    peaks_fft = peaks_fft[np.argsort(-f.spectrum_smooth[peaks_fft])][:nextra_frequencies]
+    fundamentals_fft = [round(f.frequencies[idx]) for idx in peaks_fft]
 
-    plot_spectrum_curve.setData(frequencies, spectrum_db)
+    plot_spectrum_curve.setData(f.frequencies, spectrum_db)
 
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[(len(correlation) // 2):]
@@ -158,8 +161,8 @@ def on_data_available():
     for i in range(nextra_frequencies):
         if i < len(fundamentals):
             frequency = fundamentals[i]
-            idx = np.argmin(np.abs(frequencies - frequency))
-            amplitude = spectrum_smooth[idx]
+            idx = np.argmin(np.abs(f.frequencies - frequency))
+            amplitude = f.spectrum_smooth[idx]
             xloc = frequency
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
@@ -170,8 +173,8 @@ def on_data_available():
 
         if i < len(peaks_fft):
             idx = peaks_fft[i]
-            amplitude = spectrum_smooth[idx]
-            frequency = round(frequencies[idx])
+            amplitude = f.spectrum_smooth[idx]
+            frequency = round(f.frequencies[idx])
             if amplitude > 0.01:
                 xloc = frequency
                 if USE_LOG_FREQUENCY:
@@ -186,40 +189,40 @@ def on_data_available():
     if len(fundamentals) == 0:
         return
     now = int(time.time()*1000)
-    update_allowed = (now - last_update) > min_update_interval
+    update_allowed = (now - f.last_update) > min_update_interval
     freq_diff_ok = (
-        last_fundamental is None
-        or abs(fundamentals[0] - last_fundamental) > min_freq_change
+        f.last_fundamental is None
+        or abs(fundamentals[0] - f.last_fundamental) > min_freq_change
     )
 
     fft_match = any(abs(fundamentals[0] - f) < 5 for f in fundamentals_fft)
 
     if update_allowed and freq_diff_ok and fft_match:
         if frequency_min < fundamentals[0] < frequency_max:
-            last_fundamentals.append(fundamentals[0])
-            median_freq = np.median(last_fundamentals)
+            f.last_fundamentals.append(fundamentals[0])
+            median_freq = np.median(f.last_fundamentals)
             tension = spokes.tension(median_freq)
-            last_fundamental = round(median_freq)
-            last_tension = tension
-            last_time = now
-            last_update = now
+            f.last_fundamental = round(median_freq)
+            f.last_tension = tension
+            f.last_time = now
+            f.last_update = now
 
-    if (now - last_time) > hold_duration:
-        last_fundamental = None
-        last_tension = None
-        last_fundamentals.clear()
+    if (now - f.last_time) > hold_duration:
+        f.last_fundamental = None
+        f.last_tension = None
+        f.last_fundamentals.clear()
 
-    if last_fundamental is not None:
-        idx = np.argmin(np.abs(frequencies - last_fundamental))
+    if f.last_fundamental is not None:
+        idx = np.argmin(np.abs(f.frequencies - f.last_fundamental))
 
-        xloc = last_fundamental
+        xloc = f.last_fundamental
         if USE_LOG_FREQUENCY:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_fundamental}Hz = {last_tension}N")
+        peak_text.setText(f"{f.last_fundamental}Hz = {f.last_tension}N")
 
-        kgf = round(last_tension / 9.80665)
-        indicator_text = f"{last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
+        kgf = round(f.last_tension / 9.80665)
+        indicator_text = f"{f.last_fundamental}Hz -> {f.last_tension}N = {kgf}kgf"
         top_indicator.setText(indicator_text)
     else:
         top_indicator.setText("Frequency: -- Hz")
@@ -260,15 +263,9 @@ max_slider.valueChanged.connect(on_slider_changed)
 
 on_slider_changed()
 
-last_fundamental = None
-last_tension = None
-last_time = int(time.time()*1000)
-last_update = int(time.time()*1000)
-
 hold_duration = 2000
 min_update_interval = 600
 min_freq_change = 5.0
-last_fundamentals = collections.deque(maxlen=6)
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
