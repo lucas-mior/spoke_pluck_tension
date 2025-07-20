@@ -42,8 +42,7 @@ tension_label = QtWidgets.QLabel("Tension: -- N  (-- kgf)")
 tension_label.setStyleSheet("""
     font-size: 22pt;
     color: orange;
-    background-color:
-    black;
+    background-color: black;
 """)
 main_layout.addWidget(tension_label)
 
