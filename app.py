@@ -68,6 +68,9 @@ slider_layout.addLayout(max_slider_layout)
 main_layout.addLayout(slider_layout)
 
 frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
+result = frequencies[(frequencies > 300) & (frequencies < 320)]
+print(f"{result=}")
+# exit(0)
 spectrum_smooth = np.zeros(len(frequencies))
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
@@ -80,18 +83,18 @@ plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(-50, 0)
 main_layout.addWidget(layout_plots)
 
-nextra_frequencies = 3
 peak_texts = []
-for i in range(nextra_frequencies):
-    text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
-    peak_texts.append(text_item)
-    plot_spectrum.addItem(peak_texts[i])
-
 correlation_texts = []
+
+nextra_frequencies = 3
 for i in range(nextra_frequencies):
     text_item = pyqtgraph.TextItem('',anchor=(0.5, 2.5), color='green')
     correlation_texts.append(text_item)
     plot_spectrum.addItem(correlation_texts[i])
+
+    text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
+    peak_texts.append(text_item)
+    plot_spectrum.addItem(peak_texts[i])
 
 def on_data_available():
     global last_fundamental, last_tension
@@ -138,6 +141,10 @@ def on_data_available():
     peaks, _ = scipy.signal.find_peaks(spectrum_smooth)
     peaks = peaks[np.argsort(-spectrum_smooth[peaks])]
     peaks = peaks[:nextra_frequencies]
+    fundamentals_fft = [int(round(frequencies[idx])) for idx in peaks]
+
+    print(f"{fundamentals[0]=} {fundamentals_fft[0]=}")
+
     for i, idx in enumerate(peaks):
         amplitude = spectrum_smooth[idx]
         frequency = int(round(frequencies[idx]))
