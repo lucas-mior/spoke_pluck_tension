@@ -42,14 +42,6 @@ main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 
-top_indicator = QtWidgets.QLabel("Frequency: -- Hz")
-top_indicator.setStyleSheet("""
-    font-size: 22pt;
-    color: cyan;
-    background-color: black;
-""")
-main_layout.addWidget(top_indicator)
-
 slider_layout = QtWidgets.QVBoxLayout()
 
 min_label = QtWidgets.QLabel()
@@ -76,6 +68,14 @@ slider_layout.addLayout(min_slider_layout)
 slider_layout.addLayout(max_slider_layout)
 
 main_layout.addLayout(slider_layout)
+
+top_indicator = QtWidgets.QLabel("Frequency: -- Hz")
+top_indicator.setStyleSheet("""
+    font-size: 22pt;
+    color: cyan;
+    background-color: black;
+""")
+main_layout.addWidget(top_indicator)
 
 frequencies = np.fft.rfftfreq(FRAMES_PER_BUFFER, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
