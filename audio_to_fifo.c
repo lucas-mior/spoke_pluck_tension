@@ -17,7 +17,7 @@ typedef int16_t int16;
 #define FIFO_PATH "/tmp/audio_fifo"
 #define OVERFLOW_CHECK_INTERVAL 2
 
-static atomic_int overflow_count = 0;
+static atomic_int had_overflow = 0;
 static volatile sig_atomic_t running = 1;
 
 #ifndef INTEGERS
@@ -73,11 +73,11 @@ record_callback(void *output_buffer, void *input_buffer,
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
         error("rtaudio: input overflow.\n");
-        atomic_fetch_add(&overflow_count, 1);
+        atomic_fetch_add(&had_overflow, 1);
     }
     if (status & RTAUDIO_STATUS_OUTPUT_UNDERFLOW) {
         error("rtaudio: output underflow.\n");
-        atomic_fetch_add(&overflow_count, 1);
+        atomic_fetch_add(&had_overflow, 1);
     }
 
     if (!in)
@@ -144,18 +144,18 @@ main(void) {
     printf("Streaming audio to FIFO... Press Ctrl+C to stop.\n");
 
     while (running) {
-        int count;
+        int overflow_count;
         double average;
         sleep(OVERFLOW_CHECK_INTERVAL);
 
-        count = atomic_exchange(&overflow_count, 0);
-        total += count;
+        overflow_count = atomic_exchange(&had_overflow, 0);
+        total += overflow_count;
         seconds += OVERFLOW_CHECK_INTERVAL;
 
         average = (double)total / seconds;
-        if ((average > 0.1) || (count > 0)) {
+        if ((average > 0.1) || (overflow_count > 0)) {
             error("Input overflows in last %d seconds: %d | average: %.2f/s\n",
-                  OVERFLOW_CHECK_INTERVAL, count, average);
+                  OVERFLOW_CHECK_INTERVAL, overflow_count, average);
         }
     }
 
