@@ -1,17 +1,16 @@
 #!/usr/bin/python
 
-import os
+import time
 import atexit
-import queue
+import os
+import subprocess
+import select
+import collections
 import numpy as np
+import scipy
 import pyqtgraph
 from pyqtgraph.Qt import QtWidgets
 from PyQt6.QtCore import Qt
-import subprocess
-import select
-import time
-from collections import deque
-import scipy
 
 import spokes
 
@@ -251,7 +250,7 @@ last_update = int(time.time()*1000)
 hold_duration = 2000
 min_update_interval = 600
 min_freq_change = 5.0
-last_fundamentals = deque(maxlen=6)
+last_fundamentals = collections.deque(maxlen=6)
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
