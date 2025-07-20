@@ -254,10 +254,10 @@ last_tension = None
 last_time = int(time.time()*1000)
 last_update = int(time.time()*1000)
 
-hold_duration = 1000
-min_update_interval = 300
+hold_duration = 2000
+min_update_interval = 600
 min_freq_change = 5.0
-last_fundamentals = deque(maxlen=3)
+last_fundamentals = deque(maxlen=6)
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
