@@ -72,11 +72,11 @@ record_callback(void *output_buffer, void *input_buffer,
     (void) stream_time;
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
-        printf("INPUT_OVERFLOW\n");
+        error("rtaudio: input overflow.\n");
         atomic_fetch_add(&overflow_count, 1);
     }
     if (status & RTAUDIO_STATUS_OUTPUT_UNDERFLOW) {
-        printf("OUTPUT_UNDERFLOW\n");
+        error("rtaudio: output underflow.\n");
         atomic_fetch_add(&overflow_count, 1);
     }
 
@@ -117,7 +117,7 @@ main(void) {
         exit(EXIT_FAILURE);
     }
 
-    rt_stream_params.device_id    = rtaudio_get_default_input_device(rt_handle);
+    rt_stream_params.device_id = rtaudio_get_default_input_device(rt_handle);
     rt_stream_params.num_channels = 1;
     rt_stream_params.first_channel = 0;
 
@@ -154,8 +154,8 @@ main(void) {
 
         average = (double)total / seconds;
         if ((average > 0.1) || (count > 0)) {
-            printf("Input overflows in last %d seconds: %d | average: %.2f/s\n",
-                   OVERFLOW_CHECK_INTERVAL, count, average);
+            error("Input overflows in last %d seconds: %d | average: %.2f/s\n",
+                  OVERFLOW_CHECK_INTERVAL, count, average);
         }
     }
 
