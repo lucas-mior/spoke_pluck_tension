@@ -11,6 +11,7 @@ import scipy
 import pyqtgraph
 from pyqtgraph.Qt import QtWidgets
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 
 import spokes
 
@@ -97,10 +98,12 @@ correlation_texts = []
 nextra_frequencies = 5
 for i in range(nextra_frequencies):
     text_item = pyqtgraph.TextItem('',anchor=(0.5, 2.5), color='green')
+    text_item.setFont(QFont('LiberationSans', 18))
     correlation_texts.append(text_item)
     plot_spectrum.addItem(correlation_texts[i])
 
     text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
+    text_item.setFont(QFont('LiberationSans', 18))
     peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
 
@@ -164,7 +167,7 @@ def on_data_available():
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency:.1f}Hz")
+            peak_texts[i].setText(f"{frequency}Hz")
         else:
             peak_texts[i].setText("")
 
@@ -177,7 +180,7 @@ def on_data_available():
             if USE_LOG_FREQUENCY:
                 xloc = np.log10(xloc)
             correlation_texts[i].setPos(xloc, amplitude)
-            correlation_texts[i].setText(f"{frequency:.1f}Hz")
+            correlation_texts[i].setText(f"{frequency}Hz")
         else:
             correlation_texts[i].setText("")
 
@@ -212,10 +215,10 @@ def on_data_available():
         if USE_LOG_FREQUENCY:
             xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{last_fundamental:.1f}Hz = {last_tension}N")
+        peak_text.setText(f"{last_fundamental}Hz = {last_tension}N")
 
         kgf = round(last_tension / 9.80665)
-        indicator_text = f"{last_fundamental:.1f}Hz -> {last_tension}N = {kgf}kgf"
+        indicator_text = f"{last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
         top_indicator.setText(indicator_text)
     else:
         top_indicator.setText("Frequency: -- Hz")
