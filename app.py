@@ -12,7 +12,7 @@ import subprocess
 import select
 import time
 from collections import deque
-from scipy.signal import find_peaks
+import scipy
 
 import spokes
 
@@ -80,7 +80,7 @@ plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(-50, 0)
 main_layout.addWidget(layout_plots)
 
-nextra_frequencies = 10
+nextra_frequencies = 3
 peak_texts = []
 for i in range(nextra_frequencies):
     text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
@@ -88,8 +88,8 @@ for i in range(nextra_frequencies):
     plot_spectrum.addItem(peak_texts[i])
 
 correlation_texts = []
-for i in range(3):
-    text_item = pyqtgraph.TextItem('',anchor=(0.5, -0.5), color='green')
+for i in range(nextra_frequencies):
+    text_item = pyqtgraph.TextItem('',anchor=(0.5, 2.5), color='green')
     correlation_texts.append(text_item)
     plot_spectrum.addItem(correlation_texts[i])
 
@@ -102,7 +102,7 @@ def detect_fundamental_autocorrelation(signal):
     correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
 
-    peaks, _ = find_peaks(correlation)
+    peaks, _ = scipy.signal.find_peaks(correlation)
     top_peaks = peaks[np.argsort(-correlation[peaks])][:3]
     top_peaks = [p + min_lag for p in top_peaks]
     return [int(round(SAMPLE_RATE / lag)) for lag in top_peaks]
@@ -137,6 +137,34 @@ def on_data_available():
     fundamentals = detect_fundamental_autocorrelation(signal)
     if len(fundamentals) == 0:
         return
+    peaks, _ = scipy.signal.find_peaks(spectrum_smooth)
+    peaks = peaks[np.argsort(-spectrum_smooth[peaks])]
+    peaks = peaks[:nextra_frequencies]
+    for i, idx in enumerate(peaks):
+        amplitude = spectrum_smooth[idx]
+        frequency = int(round(frequencies[idx]))
+        if amplitude > 0.01:
+            xloc = frequency
+            if USE_LOG_FREQUENCY:
+                xloc = np.log10(xloc)
+            peak_texts[i].setPos(xloc, amplitude)
+            peak_texts[i].setText(f"{frequency}Hz")
+        else:
+            peak_texts[i].setText("")
+
+    for i in range(nextra_frequencies):
+        if i < len(fundamentals):
+            frequency = fundamentals[i]
+            idx = np.argmin(np.abs(frequencies - frequency))
+            amplitude = spectrum_smooth[idx]
+            xloc = frequency
+            if USE_LOG_FREQUENCY:
+                xloc = np.log10(xloc)
+            correlation_texts[i].setPos(xloc, amplitude)
+            correlation_texts[i].setText(f"{frequency}Hz")
+        else:
+            correlation_texts[i].setText("")
+
 
     now = int(time.time()*1000)
     update_allowed = (now - last_update) > min_update_interval
@@ -175,34 +203,6 @@ def on_data_available():
     else:
         top_indicator.setText("Frequency: -- Hz")
         peak_text.setText("")
-
-    peaks, _ = find_peaks(spectrum_smooth)
-    peaks = peaks[np.argsort(-spectrum_smooth[peaks])]
-    peaks = peaks[:nextra_frequencies]
-    for i, idx in enumerate(peaks):
-        amplitude = spectrum_smooth[idx]
-        frequency = int(round(frequencies[idx]))
-        if amplitude > 0.01:
-            xloc = frequency
-            if USE_LOG_FREQUENCY:
-                xloc = np.log10(xloc)
-            peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency}Hz")
-        else:
-            peak_texts[i].setText("")
-
-    for i in range(3):
-        if i < len(fundamentals):
-            frequency = fundamentals[i]
-            idx = np.argmin(np.abs(frequencies - frequency))
-            amplitude = spectrum_smooth[idx]
-            xloc = frequency
-            if USE_LOG_FREQUENCY:
-                xloc = np.log10(xloc)
-            correlation_texts[i].setPos(xloc, amplitude)
-            correlation_texts[i].setText(f"{frequency}Hz")
-        else:
-            correlation_texts[i].setText("")
 
     return
 
