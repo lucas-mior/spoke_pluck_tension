@@ -41,24 +41,33 @@ top_indicator.setStyleSheet("""
 """)
 main_layout.addWidget(top_indicator)
 
-slider_layout = QtWidgets.QVBoxLayout()
+slider_layout = QtWidgets.QHBoxLayout()
 
 min_label = QtWidgets.QLabel()
+min_label.setFixedWidth(130)
 min_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 min_slider.setMinimum(TENSION_MIN)
 min_slider.setMaximum(TENSION_AVG)
 min_slider.setValue(int(round((TENSION_MIN + TENSION_AVG)/2)))
 
+min_slider_layout = QtWidgets.QHBoxLayout()
+min_slider_layout.addWidget(min_label)
+min_slider_layout.addWidget(min_slider)
+
 max_label = QtWidgets.QLabel()
+max_label.setFixedWidth(130)
 max_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
 max_slider.setMinimum(TENSION_AVG)
 max_slider.setMaximum(TENSION_MAX)
 max_slider.setValue(int(round((TENSION_AVG + TENSION_MAX)/2)))
 
-slider_layout.addWidget(min_label)
-slider_layout.addWidget(max_label)
-slider_layout.addWidget(min_slider)
-slider_layout.addWidget(max_slider)
+max_slider_layout = QtWidgets.QHBoxLayout()
+max_slider_layout.addWidget(max_label)
+max_slider_layout.addWidget(max_slider)
+
+slider_layout.addLayout(min_slider_layout)
+slider_layout.addLayout(max_slider_layout)
+
 main_layout.addLayout(slider_layout)
 
 frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
