@@ -90,7 +90,6 @@ def detect_fundamental_autocorrelation(signal):
 
     correlation /= np.max(correlation)
     correlation = correlation[min_lag:max_lag]
-    # correlation_curve.setData(correlation_lags[:len(correlation)], correlation)
 
     peak_idx = np.argmax(correlation) + min_lag
     return int(round(SAMPLE_RATE / peak_idx))
@@ -185,9 +184,6 @@ def on_data_available():
 
 def set_x_range(f0, f1):
     global plot_spectrum
-
-    print("set_x_range")
-
     if USE_LOG_FREQUENCY:
         plot_spectrum.setLogMode(x=True, y=False)
         xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
@@ -242,16 +238,7 @@ last_update = int(time.time()*1000)
 hold_duration = 1000
 min_update_interval = 300
 min_freq_change = 5.0
-
 last_fundamentals = deque(maxlen=3)
-plot_correlation = layout_plots.addPlot(title="Auto Correlation")
-correlation_curve = plot_correlation.plot(pen='g')
-plot_correlation.setLabel('left', "Correlation")
-plot_correlation.setLabel('bottom', 'Lag')
-plot_correlation.setYRange(0, 1)
-plot_correlation.setXRange(min_lag, max_lag)
-
-correlation_lags = np.arange(min_lag, max_lag)
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
