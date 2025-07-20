@@ -81,7 +81,7 @@ spectrum_smooth = np.zeros(len(frequencies))
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
-plot_spectrum.setLabel('left', 'Magnitude (dB)')
+plot_spectrum.setLabel('left', 'Magnitude')
 plot_spectrum.setLabel('bottom', 'Frequency (Hz)')
 plot_spectrum_curve = plot_spectrum.plot(
     pen=pyqtgraph.mkPen('y', width=3, join=Qt.PenJoinStyle.RoundJoin)
