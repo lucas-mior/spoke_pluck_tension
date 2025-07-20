@@ -160,18 +160,6 @@ def on_data_available():
     peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
     fundamentals_fft = [round(frequencies[idx]) for idx in peaks_fft]
 
-    for i, idx in enumerate(peaks_fft):
-        amplitude = spectrum_smooth[idx]
-        frequency = round(frequencies[idx])
-        if amplitude > 0.01:
-            xloc = frequency
-            if USE_LOG_FREQUENCY:
-                xloc = np.log10(xloc)
-            peak_texts[i].setPos(xloc, amplitude)
-            peak_texts[i].setText(f"{frequency}Hz")
-        else:
-            peak_texts[i].setText("")
-
     for i in range(nextra_frequencies):
         if i < len(fundamentals):
             frequency = fundamentals[i]
@@ -185,6 +173,20 @@ def on_data_available():
         else:
             correlation_texts[i].setText("")
 
+        idx = peaks_fft[i]
+        amplitude = spectrum_smooth[idx]
+        frequency = round(frequencies[idx])
+        if amplitude > 0.01:
+            xloc = frequency
+            if USE_LOG_FREQUENCY:
+                xloc = np.log10(xloc)
+            peak_texts[i].setPos(xloc, amplitude)
+            peak_texts[i].setText(f"{frequency}Hz")
+        else:
+            peak_texts[i].setText("")
+
+    if len(fundamentals) == 0:
+        return
     now = int(time.time()*1000)
     update_allowed = (now - last_update) > min_update_interval
     freq_diff_ok = (
