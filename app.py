@@ -70,7 +70,6 @@ main_layout.addLayout(slider_layout)
 
 frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
-spectrum_max = 0
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
@@ -103,7 +102,7 @@ def detect_fundamental_autocorrelation(signal):
 def on_data_available():
     global last_fundamental, last_tension
     global last_time, last_update
-    global spectrum_smooth, spectrum_max
+    global spectrum_smooth
     global last_fundamentals
 
     try:
@@ -206,13 +205,7 @@ def on_slider_changed():
     global frequency_min, frequency_max, min_lag, max_lag
     global last_fundamental, last_tension
     global last_time, last_update
-    global spectrum_smooth, spectrum_max
     global last_fundamentals
-
-    print("on_slider_changed")
-
-    spectrum_smooth = np.zeros(len(frequencies))
-    spectrum_max = 0
 
     frequency_min = spokes.frequency(min_slider.value())
     frequency_max = spokes.frequency(max_slider.value())
