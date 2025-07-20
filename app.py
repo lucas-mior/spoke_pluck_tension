@@ -14,6 +14,8 @@ from PyQt6.QtCore import Qt
 
 import spokes
 
+pyqtgraph.setConfigOptions(antialias=True)
+
 USE_LOG_FREQUENCY = False
 SAMPLE_RATE = 44100
 BLOCK_SIZE = 4096
