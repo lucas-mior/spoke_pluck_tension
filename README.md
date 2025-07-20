@@ -33,8 +33,8 @@ values.
 
 ## Spokes parameters
 You should set the spoke parameters in `spokes.py`. The most relevant are:
-- `SPOKE_DIAMETER`: Diameter of your spokes (currently only works for straight
-  spokes).
+- `SPOKE_DIAMETER`: Diameter of your spokes (currently only works for plain
+  gauge spokes).
 - `SPOKE_LENGTH`: Length of the spoke, from the nipple bottom until it crosses
    another spoke, if [interlaced](https://www.youtube.com/watch?v=-fX5mAOzJVU&pp=ugMICgJwdBABGAHKBRBzcG9rZXMgaW50ZXJsYWNl)),
    or until the hub flange (if not interlaced).
