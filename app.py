@@ -163,7 +163,7 @@ def on_data_available():
         peak_text.setText(f"{last_fundamental}Hz = {last_tension}N")
 
         kgf = int(round(last_tension / 9.80665))
-        indicator_text = f"Frequency: {last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
+        indicator_text = f"{last_fundamental}Hz -> {last_tension}N = {kgf}kgf"
         top_indicator.setText(indicator_text)
     else:
         top_indicator.setText("Frequency: -- Hz")
