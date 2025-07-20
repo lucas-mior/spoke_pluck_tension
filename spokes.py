@@ -1,19 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-steel_density = 8000  # kg/m³
-diameter = 0.002  # meters
-spoke_area = np.pi * (diameter / 2) ** 2
-mu_steel_2mm = steel_density * spoke_area
-length0=0.20
+STEEL_DENSITY = 7930  # kg/m³
+SPOKE_DIAMETER = 0.002  # meters
+SPOKE_CROSS_SECTION = np.pi*(SPOKE_DIAMETER / 2)**2
+MU_STEEL_2mm = STEEL_DENSITY*SPOKE_CROSS_SECTION
+LENGTH_DEFAULT=0.20
 
 
-def tension(frequency, length=length0):
-    return int(round(4*(length**2)*(frequency**2)*mu_steel_2mm))
+def tension(frequency, length=LENGTH_DEFAULT):
+    return int(round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
 
 
-def frequency(tension, length=length0):
-    return int(round(np.sqrt(tension / mu_steel_2mm) / (2 * length)))
+def frequency(tension, length=LENGTH_DEFAULT):
+    return int(round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
 
 
 if __name__ == "__main__":
