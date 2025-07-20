@@ -18,6 +18,7 @@ import spokes
 pyqtgraph.setConfigOptions(antialias=True)
 
 USE_LOG_FREQUENCY = False
+ALPHA_SPECTRUM = 0.5
 
 Cfile_name = "./audio_to_fifo"
 Cfile = open(f"{Cfile_name}.c")
@@ -30,8 +31,6 @@ for line in Cfile:
             SAMPLE_RATE = int(parts[2])
         case "FRAMES_PER_BUFFER":
             FRAMES_PER_BUFFER = int(parts[2])
-
-ALPHA_SPECTRUM = 0.5
 
 frequency_min = spokes.frequency(spokes.TENSION_MIN)
 frequency_max = spokes.frequency(spokes.TENSION_MAX)
@@ -106,6 +105,7 @@ for i in range(nextra_frequencies):
     text_item.setFont(QFont('LiberationSans', 18))
     peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
+
 
 def on_data_available():
     global last_fundamental, last_tension
@@ -230,6 +230,7 @@ def on_data_available():
 
     return
 
+
 def on_slider_changed():
     global frequency_min, frequency_max
     global min_lag, max_lag
@@ -255,6 +256,7 @@ def on_slider_changed():
     else:
         plot_spectrum.setXRange(f0, f1)
     return
+
 
 min_slider.valueChanged.connect(on_slider_changed)
 max_slider.valueChanged.connect(on_slider_changed)
