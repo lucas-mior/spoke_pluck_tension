@@ -16,14 +16,14 @@ from collections import deque
 
 import spokes
 
-sample_rate = 44100
-blocksize = 4096
-alpha_spectrum = 0.5
+SAMPLE_RATE = 44100
+BLOCK_SIZE = 4096
+ALPHA_SPECTRUM = 0.5
+TENSION_MIN = 200
+TENSION_MAX = 2000
 
-tension_min = 200
-tension_max = 2000
-frequency_min = spokes.frequency(tension_min)
-frequency_max = spokes.frequency(tension_max)
+frequency_min = spokes.frequency(TENSION_MIN)
+frequency_max = spokes.frequency(TENSION_MAX)
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -47,12 +47,12 @@ tension_label.setStyleSheet("""
 """)
 main_layout.addWidget(tension_label)
 
-frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
 spectrum_smooth = np.zeros(len(frequencies))
 spectrum_max = 0
 
 
-def detect_fundamental_autocorrelation(signal, sample_rate):
+def detect_fundamental_autocorrelation(signal, SAMPLE_RATE):
     signal = signal - np.mean(signal)
     correlation = np.correlate(signal, signal, mode='full')
     correlation = correlation[(len(correlation) // 2):]
@@ -66,7 +66,7 @@ def detect_fundamental_autocorrelation(signal, sample_rate):
     # energy = np.sum(signal**2)
     # if energy < 1 or peak_idx == 0:
     #     return 0.0
-    return int(round(sample_rate / peak_idx))
+    return int(round(SAMPLE_RATE / peak_idx))
 
 
 def on_data_available():
@@ -76,7 +76,7 @@ def on_data_available():
     global last_fundamentals
 
     try:
-        raw = fifo_file.read(blocksize*2)
+        raw = fifo_file.read(BLOCK_SIZE*2)
         if not raw:
             return
     except BlockingIOError:
@@ -89,14 +89,15 @@ def on_data_available():
 
     spectrum = np.abs(np.fft.rfft(signal)) / len(signal)
     spectrum[spectrum == 0] = 1e-12
-    spectrum_smooth = (1 - alpha_spectrum)*spectrum_smooth + alpha_spectrum*spectrum
+    spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth \
+            + ALPHA_SPECTRUM*spectrum
     spectrum_db = spectrum_smooth
 
     plot_spectrum.setYRange(0.0, 0.1)
     curve.setData(frequencies, spectrum_db)
 
     now = QtCore.QTime.currentTime()
-    fundamental = detect_fundamental_autocorrelation(signal, sample_rate)
+    fundamental = detect_fundamental_autocorrelation(signal, SAMPLE_RATE)
     print(f"{fundamental=}")
 
     update_allowed = last_update_time.msecsTo(now) > min_update_interval
@@ -162,7 +163,7 @@ def on_slider_changed():
     global spectrum_smooth, spectrum_max
     global last_fundamentals, frequencies
 
-    frequencies = np.fft.rfftfreq(blocksize, d=1 / sample_rate)
+    frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=2 / SAMPLE_RATE)
     spectrum_smooth = np.zeros(len(frequencies))
     spectrum_max = 0
 
@@ -170,8 +171,8 @@ def on_slider_changed():
     frequency_max = spokes.frequency(max_slider.value())
     f0 = frequency_min/2
     f1 = frequency_max*4
-    min_lag = int(sample_rate / f1)
-    max_lag = int(sample_rate / f0)
+    min_lag = int(SAMPLE_RATE / f1)
+    max_lag = int(SAMPLE_RATE / f0)
 
     print(f"{frequency_min=} {frequency_max=}")
 
