@@ -25,7 +25,6 @@ for line in Cfile:
     if not line.startswith("#define"):
         continue
     parts = line.split()
-    print("parts:", parts)
     match parts[1]:
         case "SAMPLE_RATE":
             SAMPLE_RATE = int(parts[2])
@@ -132,6 +131,10 @@ def on_data_available():
     spectrum_smooth = (1 - ALPHA_SPECTRUM)*spectrum_smooth + ALPHA_SPECTRUM*spectrum
     spectrum_db = spectrum_smooth
 
+    peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
+    peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
+    fundamentals_fft = [round(frequencies[idx]) for idx in peaks_fft]
+
     plot_spectrum_curve.setData(frequencies, spectrum_db)
 
     correlation = np.correlate(signal, signal, mode='full')
@@ -155,10 +158,6 @@ def on_data_available():
             lag = (p + d) + min_lag
         freq = SAMPLE_RATE / lag
         fundamentals.append(round(freq))
-
-    peaks_fft, _ = scipy.signal.find_peaks(spectrum_smooth)
-    peaks_fft = peaks_fft[np.argsort(-spectrum_smooth[peaks_fft])][:nextra_frequencies]
-    fundamentals_fft = [round(frequencies[idx]) for idx in peaks_fft]
 
     for i in range(nextra_frequencies):
         if i < len(fundamentals):
