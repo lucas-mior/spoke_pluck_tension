@@ -65,9 +65,6 @@ slider_layout.addLayout(max_slider_layout)
 main_layout.addLayout(slider_layout)
 
 frequencies = np.fft.rfftfreq(BLOCK_SIZE, d=1 / SAMPLE_RATE)
-result = frequencies[(frequencies > 300) & (frequencies < 320)]
-print(f"{result=}")
-# exit(0)
 spectrum_smooth = np.zeros(len(frequencies))
 
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
