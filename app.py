@@ -179,7 +179,7 @@ def on_data_available():
             idx = peaks_fft[i]
             amplitude = f.spectrum_smooth[idx]
             frequency = round(f.frequencies[idx])
-            if amplitude > 0.005:
+            if True or amplitude > 0.005:
                 xloc = frequency
                 if USE_LOG_FREQUENCY:
                     xloc = np.log10(xloc)
