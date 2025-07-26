@@ -98,7 +98,6 @@ int
 main(void) {
     int fifo;
     int total = 0;
-    int seconds = 0;
     uint32 buffer_frames;
 
     rtaudio_stream_parameters_t rt_stream_params;
@@ -144,6 +143,7 @@ main(void) {
     printf("Streaming audio to FIFO... Press Ctrl+C to stop.\n");
 
     while (running) {
+        static int seconds = 0;
         int overflow_count;
         double average;
         sleep(OVERFLOW_CHECK_INTERVAL);

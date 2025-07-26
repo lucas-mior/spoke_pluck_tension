@@ -155,8 +155,7 @@ def on_data_available():
                 y0, y1, y2 = correlation[p - 1], correlation[p], correlation[p + 1]
                 d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
                 lag = (p + d) + min_lag
-            freq = SAMPLE_RATE / lag
-            fundamentals.append(round(freq))
+            fundamentals.append(round(SAMPLE_RATE / lag))
 
     for i in range(nextra_frequencies):
         if i < len(fundamentals):
