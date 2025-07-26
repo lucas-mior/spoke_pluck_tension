@@ -10,6 +10,7 @@ import numpy as np
 import scipy
 import pyqtgraph
 from pyqtgraph.Qt import QtWidgets
+from pyqtgraph import AxisItem
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
@@ -72,7 +73,6 @@ top_indicator.setStyleSheet("""
 """)
 main_layout.addWidget(top_indicator)
 
-
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
 plot_spectrum.setLabel('left', 'Magnitude')
@@ -103,6 +103,21 @@ for i in range(nfrequencies_fft):
     peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
 
+tension_axis = pyqtgraph.AxisItem(orientation='bottom')
+plot_spectrum.layout.addItem(tension_axis, 4, 1)
+tension_axis.linkToView(plot_spectrum.getViewBox())
+tension_axis.setZValue(-1000)
+
+def tickStrings_tension(values, scale, spacing):
+    return [f"{round(spokes.tension(v))}N" for v in values]
+
+tension_axis.tickStrings = tickStrings_tension
+
+def update_tension_axis():
+    r = plot_spectrum.getViewBox().viewRange()[0]
+    tension_axis.setRange(r)
+
+plot_spectrum.getViewBox().sigXRangeChanged.connect(update_tension_axis)
 
 def on_data_available():
     f = on_data_available
