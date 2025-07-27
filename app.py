@@ -19,6 +19,7 @@ import spokes
 pyqtgraph.setConfigOptions(antialias=True)
 
 ALPHA_SPECTRUM = 0.5
+DEBUG = False
 
 Cfile_name = "./audio_to_fifo"
 Cfile = open(f"{Cfile_name}.c")
@@ -177,31 +178,32 @@ def on_data_available():
                 lag = (p + d) + min_lag
             fundamentals.append(round(SAMPLE_RATE / lag))
 
-    for i in range(npeaks_corr):
-        if i < len(fundamentals):
-            frequency = fundamentals[i]
-            idx = np.argmin(np.abs(f.frequencies - frequency))
-            amplitude = f.spectrum_smooth[idx]
-            if amplitude > 0.005:
-                corr_texts[i].setPos(frequency, amplitude)
-                corr_texts[i].setText(f"{frequency}Hz")
+    if DEBUG:
+        for i in range(npeaks_corr):
+            if i < len(fundamentals):
+                frequency = fundamentals[i]
+                idx = np.argmin(np.abs(f.frequencies - frequency))
+                amplitude = f.spectrum_smooth[idx]
+                if amplitude > 0.001:
+                    corr_texts[i].setPos(frequency, amplitude)
+                    corr_texts[i].setText(f"{frequency}Hz")
+                else:
+                    corr_texts[i].setText("")
             else:
                 corr_texts[i].setText("")
-        else:
-            corr_texts[i].setText("")
 
-    for i in range(npeaks_fft):
-        if i < len(peaks_fft):
-            idx = peaks_fft[i]
-            amplitude = f.spectrum_smooth[idx]
-            frequency = round(f.frequencies[idx])
-            if amplitude > 0.005:
-                peak_texts[i].setPos(frequency, amplitude)
-                peak_texts[i].setText(f"{frequency}Hz")
+        for i in range(npeaks_fft):
+            if i < len(peaks_fft):
+                idx = peaks_fft[i]
+                amplitude = f.spectrum_smooth[idx]
+                frequency = round(f.frequencies[idx])
+                if amplitude > 0.001:
+                    peak_texts[i].setPos(frequency, amplitude)
+                    peak_texts[i].setText(f"{frequency}Hz")
+                else:
+                    peak_texts[i].setText("")
             else:
                 peak_texts[i].setText("")
-        else:
-            peak_texts[i].setText("")
 
     if len(fundamentals) == 0:
         return
