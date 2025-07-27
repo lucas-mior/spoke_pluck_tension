@@ -96,8 +96,13 @@ layout_with_slider.addWidget(layout_plots)
 main_layout.addLayout(layout_with_slider)
 
 def on_yscale_changed():
+    global amplitude_min
+
     v = yscale_slider.value()
+    amplitude_min = v/1e4
+    print(f"{amplitude_min=}")
     plot_spectrum.setYRange(0, v / 1000)
+    return
 
 yscale_slider.valueChanged.connect(on_yscale_changed)
 on_yscale_changed()
@@ -241,19 +246,17 @@ def on_data_available():
         return
     now = int(time.time()*1000)
     update_allowed = (now - f.last_update) > min_update_interval
-    freq_diff_ok = (
-        f.last_fundamental is None
-        or abs(fundamentals[0] - f.last_fundamental) > min_freq_change
-    )
 
     matched = None
     for f_corr in fundamentals:
         for f_fft in fundamentals_fft:
-            if abs(f_corr - f_fft) < 10:
+            idx = np.argmin(np.abs(f.frequencies - f_fft))
+            A = f.spectrum_smooth[idx]
+            if abs(f_corr - f_fft) < 10 and A > amplitude_min:
                 matched = f_corr
                 break
 
-    if matched and update_allowed and freq_diff_ok:
+    if matched and update_allowed:
         if frequency_min < matched < frequency_max:
             f.last_fundamentals.append(matched)
             median_freq = np.median(f.last_fundamentals)
