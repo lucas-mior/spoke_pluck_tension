@@ -86,17 +86,17 @@ plot_spectrum.setYRange(0, 0.1)
 main_layout.addWidget(layout_plots)
 
 peak_texts = []
-correlation_texts = []
+corr_texts = []
 
-nfrequencies_corr = 3
-for i in range(nfrequencies_corr):
+npeaks_corr = 3
+for i in range(npeaks_corr):
     text_item = pyqtgraph.TextItem('',anchor=(0.5, 2.5), color='green')
     text_item.setFont(QFont('LiberationSans', 18))
-    correlation_texts.append(text_item)
-    plot_spectrum.addItem(correlation_texts[i])
+    corr_texts.append(text_item)
+    plot_spectrum.addItem(corr_texts[i])
 
-nfrequencies_fft = 5
-for i in range(nfrequencies_fft):
+npeaks_fft = 5
+for i in range(npeaks_fft):
     text_item = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='red')
     text_item.setFont(QFont('LiberationSans', 18))
     peak_texts.append(text_item)
@@ -141,45 +141,45 @@ def on_data_available():
     spectrum_db = f.spectrum_smooth
 
     peaks_fft, _ = scipy.signal.find_peaks(f.spectrum_smooth)
-    peaks_fft = peaks_fft[np.argsort(-f.spectrum_smooth[peaks_fft])][:nfrequencies_fft]
+    peaks_fft = peaks_fft[np.argsort(-f.spectrum_smooth[peaks_fft])][:npeaks_fft]
     fundamentals_fft = np.array([round(f.frequencies[idx]) for idx in peaks_fft])
     fundamentals_fft = fundamentals_fft[fundamentals_fft > frequency_min]
     fundamentals_fft = fundamentals_fft[fundamentals_fft < frequency_max]
 
     plot_spectrum_curve.setData(f.frequencies, spectrum_db)
 
-    correlation = np.correlate(signal, signal, mode='full')
-    correlation = correlation[(len(correlation) // 2):]
-    correlation[:min_lag] = 0
+    corr = np.correlate(signal, signal, mode='full')
+    corr = corr[(len(corr) // 2):]
+    corr[:min_lag] = 0
 
-    correlation /= np.max(correlation)
-    correlation = correlation[min_lag:max_lag]
+    corr /= np.max(corr)
+    corr = corr[min_lag:max_lag]
 
-    peaks, _ = scipy.signal.find_peaks(correlation)
+    peaks_corr, _ = scipy.signal.find_peaks(corr)
     fundamentals = []
-    if len(peaks) > 0:
-        top_peaks = peaks[np.argsort(-correlation[peaks])[:nfrequencies_corr]]
+    if len(peaks_corr) > 0:
+        top_peaks = peaks_corr[np.argsort(-corr[peaks_corr])[:npeaks_corr]]
         for p in top_peaks:
-            if p <= 0 or p >= len(correlation) - 1:
+            if p <= 0 or p >= len(corr) - 1:
                 lag = p + min_lag
             else:
-                y0, y1, y2 = correlation[p - 1], correlation[p], correlation[p + 1]
+                y0, y1, y2 = corr[p - 1], corr[p], corr[p + 1]
                 d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
                 lag = (p + d) + min_lag
             fundamentals.append(round(SAMPLE_RATE / lag))
 
-    for i in range(nfrequencies_corr):
+    for i in range(npeaks_corr):
         if i < len(fundamentals):
             frequency = fundamentals[i]
             idx = np.argmin(np.abs(f.frequencies - frequency))
             amplitude = f.spectrum_smooth[idx]
             xloc = frequency
-            correlation_texts[i].setPos(xloc, amplitude)
-            correlation_texts[i].setText(f"{frequency}Hz")
+            corr_texts[i].setPos(xloc, amplitude)
+            corr_texts[i].setText(f"{frequency}Hz")
         else:
-            correlation_texts[i].setText("")
+            corr_texts[i].setText("")
 
-    for i in range(nfrequencies_fft):
+    for i in range(npeaks_fft):
         if i < len(peaks_fft):
             idx = peaks_fft[i]
             amplitude = f.spectrum_smooth[idx]
