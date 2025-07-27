@@ -118,19 +118,6 @@ for i in range(npeaks_fft):
     plot_spectrum.addItem(peak_texts[i])
 
 frequency_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=-5)
-
-# class pyqtgraph.AxisItem(
-# orientation: str,
-# pen=None,
-# textPen=None,
-# tickPen=None,
-# linkView=None,
-# parent=None,
-# maxTickLength=-5,
-# showValues=True,
-# **args,
-# )[source]
-
 def tickStrings_frequency(values, scale, spacing):
     return [f"{round(v)}Hz" for v in values]
 frequency_axis.tickStrings = tickStrings_frequency
