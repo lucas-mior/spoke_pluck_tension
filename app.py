@@ -305,6 +305,7 @@ def on_slider_changed():
     tension_kgf_axis.setHeight(30)
     return
 
+
 min_slider.valueChanged.connect(on_slider_changed)
 max_slider.valueChanged.connect(on_slider_changed)
 
