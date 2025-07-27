@@ -270,10 +270,7 @@ def on_slider_changed():
     plot_spectrum.setXRange(f0, f1)
 
     tension_axis.setLogMode(x=False, y=False)
-    tension_axis.setRange(t0, t1)
-
     tension_axis2.setLogMode(x=False, y=False)
-    tension_axis2.setRange(newton_kgf(t0), newton_kgf(t1))
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
