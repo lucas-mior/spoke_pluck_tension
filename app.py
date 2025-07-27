@@ -150,6 +150,11 @@ def tickStrings_tension2(values, scale, spacing):
 tension_axis2.tickStrings = tickStrings_tension2
 plot_spectrum.layout.addItem(tension_axis2, 5, 1)
 tension_axis2.linkToView(plot_spectrum.getViewBox())
+spacer = QtWidgets.QWidget()
+spacer.setFixedHeight(40)
+spacer_layout = QtWidgets.QHBoxLayout()
+spacer_layout.addWidget(spacer)
+main_layout.addLayout(spacer_layout)
 
 def on_data_available():
     f = on_data_available
