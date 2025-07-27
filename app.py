@@ -162,7 +162,7 @@ def on_data_available():
         f.last_tension = None
         f.last_time = time.time()*1000
         f.last_update = time.time()*1000
-        f.last_fundamentals = collections.deque(maxlen=6)
+        f.last_fundamentals = collections.deque(maxlen=1)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -272,11 +272,11 @@ def on_data_available():
         idx = np.argmin(np.abs(f.frequencies - f.last_fundamental))
 
         xloc = f.last_fundamental
-        peak_text.setPos(xloc, spectrum_db[idx])
-        peak_text.setText(f"{f.last_fundamental}Hz = {f.last_tension}N")
-
         kgf = newton_kgf(f.last_tension)
         indicator_text = f"{f.last_fundamental}Hz -> {f.last_tension}N = {kgf}kgf"
+
+        peak_text.setPos(xloc, spectrum_db[idx])
+        peak_text.setText(indicator_text)
         top_indicator.setText(indicator_text)
     else:
         top_indicator.setText("Frequency: -- Hz")
