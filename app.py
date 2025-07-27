@@ -150,11 +150,6 @@ def tickStrings_tension2(values, scale, spacing):
 tension_axis2.tickStrings = tickStrings_tension2
 plot_spectrum.layout.addItem(tension_axis2, 5, 1)
 tension_axis2.linkToView(plot_spectrum.getViewBox())
-spacer = QtWidgets.QWidget()
-spacer.setFixedHeight(40)
-spacer_layout = QtWidgets.QHBoxLayout()
-spacer_layout.addWidget(spacer)
-main_layout.addLayout(spacer_layout)
 
 def on_data_available():
     f = on_data_available
@@ -197,7 +192,11 @@ def on_data_available():
     corr = corr[(len(corr) // 2):]
     corr[:min_lag] = 0
 
-    corr /= np.max(corr)
+    if corr_max := np.max(corr) > 0:
+        corr /= corr_max
+    else:
+        return
+
     corr = corr[min_lag:max_lag]
 
     peaks_corr, _ = scipy.signal.find_peaks(corr)
@@ -310,6 +309,8 @@ def on_slider_changed():
     plot_spectrum.getAxis('bottom').setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
     tension_axis.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
     tension_axis2.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
+
+    tension_axis2.setHeight(30)
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
