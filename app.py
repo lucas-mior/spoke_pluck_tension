@@ -316,7 +316,6 @@ on_slider_changed()
 
 hold_duration = 2000
 min_update_interval = 600
-min_freq_change = 5.0
 
 fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
