@@ -228,6 +228,7 @@ def on_data_available():
 
     if len(fundamentals) == 0:
         return
+
     now = int(time.time()*1000)
     update_allowed = (now - f.last_update) > min_update_interval
 
