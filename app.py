@@ -37,6 +37,9 @@ qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
+main_window.setWindowTitle("spoke_pluck_tension")
+main_window.resize(1000, 600)
+main_window.show()
 
 slider_layout = QtWidgets.QVBoxLayout()
 
@@ -330,10 +333,6 @@ fifo_file = os.fdopen(fifo_fd, 'rb')
 
 atexit.register(fifo_file.close)
 atexit.register(fifo_proc.terminate)
-
-main_window.setWindowTitle("spoke_pluck_tension")
-main_window.resize(1000, 600)
-main_window.show()
 
 poller = select.poll()
 poller.register(fifo_fd, select.POLLIN)
