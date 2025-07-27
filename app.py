@@ -311,9 +311,10 @@ def on_slider_changed():
 
     plot_spectrum.setLogMode(x=False, y=False)
     plot_spectrum.setXRange(f0, f1)
-
-    tension_axis.setLogMode(x=False, y=False)
-    tension_axis2.setLogMode(x=False, y=False)
+    tick_spacing = (frequency_max - frequency_min) / 10
+    plot_spectrum.getAxis('bottom').setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
+    tension_axis.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
+    tension_axis2.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
