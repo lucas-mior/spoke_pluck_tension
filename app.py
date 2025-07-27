@@ -115,7 +115,7 @@ tension_axis.linkToView(plot_spectrum.getViewBox())
 
 tension_axis2 = pyqtgraph.AxisItem(orientation='bottom')
 def tickStrings_tension2(values, scale, spacing):
-    return [f"{round(spokes.tension(v))}kgf" for v in values]
+    return [f"{newton_kgf(spokes.tension(v))}kgf" for v in values]
 tension_axis2.tickStrings = tickStrings_tension2
 plot_spectrum.layout.addItem(tension_axis2, 5, 1)
 tension_axis2.linkToView(plot_spectrum.getViewBox())
@@ -236,7 +236,7 @@ def on_data_available():
         peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(f"{f.last_fundamental}Hz = {f.last_tension}N")
 
-        kgf = round(f.last_tension / 9.80665)
+        kgf = newton_kgf(f.last_tension)
         indicator_text = f"{f.last_fundamental}Hz -> {f.last_tension}N = {kgf}kgf"
         top_indicator.setText(indicator_text)
     else:
@@ -244,6 +244,10 @@ def on_data_available():
         peak_text.setText("")
 
     return
+
+
+def newton_kgf(TN):
+    return round(TN / 9.80665)
 
 def on_slider_changed():
     global frequency_min, frequency_max
@@ -269,7 +273,7 @@ def on_slider_changed():
     tension_axis.setRange(t0, t1)
 
     tension_axis2.setLogMode(x=False, y=False)
-    tension_axis2.setRange(round(t0 / 9.80665), round(t1 / 9.80665))
+    tension_axis2.setRange(newton_kgf(t0), newton_kgf(t1))
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
