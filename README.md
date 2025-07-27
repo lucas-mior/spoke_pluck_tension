@@ -31,6 +31,9 @@ This graph shows the relation between tension and frequency for spokes of 2mm
 diameter of multiple lengths. The highlighted areas are the typical optimal
 values.
 
+### Screenshot
+![spoke_pluck_tension](screenshot.png)
+
 ## Spokes parameters
 You should set the spoke parameters in `spokes.py`. The most relevant are:
 - `SPOKE_DIAMETER`: Diameter of your spokes (currently only works for plain
