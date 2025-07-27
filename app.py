@@ -18,7 +18,6 @@ import spokes
 
 pyqtgraph.setConfigOptions(antialias=True)
 
-USE_LOG_FREQUENCY = False
 ALPHA_SPECTRUM = 0.5
 
 Cfile_name = "./audio_to_fifo"
@@ -106,18 +105,11 @@ for i in range(nfrequencies_fft):
 tension_axis = pyqtgraph.AxisItem(orientation='bottom')
 plot_spectrum.layout.addItem(tension_axis, 4, 1)
 tension_axis.linkToView(plot_spectrum.getViewBox())
-tension_axis.setZValue(-1000)
 
 def tickStrings_tension(values, scale, spacing):
     return [f"{round(spokes.tension(v))}N" for v in values]
 
 tension_axis.tickStrings = tickStrings_tension
-
-def update_tension_axis():
-    r = plot_spectrum.getViewBox().viewRange()[0]
-    tension_axis.setRange(r)
-
-plot_spectrum.getViewBox().sigXRangeChanged.connect(update_tension_axis)
 
 def on_data_available():
     f = on_data_available
@@ -182,8 +174,6 @@ def on_data_available():
             idx = np.argmin(np.abs(f.frequencies - frequency))
             amplitude = f.spectrum_smooth[idx]
             xloc = frequency
-            if USE_LOG_FREQUENCY:
-                xloc = np.log10(xloc)
             correlation_texts[i].setPos(xloc, amplitude)
             correlation_texts[i].setText(f"{frequency}Hz")
         else:
@@ -196,8 +186,6 @@ def on_data_available():
             frequency = round(f.frequencies[idx])
             if True or amplitude > 0.005:
                 xloc = frequency
-                if USE_LOG_FREQUENCY:
-                    xloc = np.log10(xloc)
                 peak_texts[i].setPos(xloc, amplitude)
                 peak_texts[i].setText(f"{frequency}Hz")
             else:
@@ -235,8 +223,6 @@ def on_data_available():
         idx = np.argmin(np.abs(f.frequencies - f.last_fundamental))
 
         xloc = f.last_fundamental
-        if USE_LOG_FREQUENCY:
-            xloc = np.log10(xloc)
         peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(f"{f.last_fundamental}Hz = {f.last_tension}N")
 
@@ -255,25 +241,23 @@ def on_slider_changed():
     global min_lag, max_lag
     global plot_spectrum
 
-    frequency_min = spokes.frequency(min_slider.value())
-    frequency_max = spokes.frequency(max_slider.value())
+    t0 = round(min_slider.value())
+    t1 = round(max_slider.value())
+    frequency_min = spokes.frequency(t0)
+    frequency_max = spokes.frequency(t1)
     f0 = frequency_min
     f1 = frequency_max*2
     min_lag = round(SAMPLE_RATE / f1)
     max_lag = round(SAMPLE_RATE / f0)
 
-    min_label.setText(f"Min Tension: {min_slider.value()}N")
-    max_label.setText(f"Max Tension: {max_slider.value()}N")
+    min_label.setText(f"Min Tension: {t0}N")
+    max_label.setText(f"Max Tension: {t1}N")
 
-    if USE_LOG_FREQUENCY:
-        plot_spectrum.setLogMode(x=True, y=False)
-        xs = np.round(np.logspace(np.log10(f0), np.log10(f1), num=10))
-        xticks = [[(np.log10(f), str(round(f))) for f in xs]]
-        xticks = np.array(xticks, dtype=object)
-        plot_spectrum.setXRange(np.log10(xs[0]), np.log10(xs[-1]))
-        plot_spectrum.getAxis('bottom').setTicks(xticks)
-    else:
-        plot_spectrum.setXRange(f0, f1)
+    plot_spectrum.setLogMode(x=False, y=False)
+    plot_spectrum.setXRange(f0, f1)
+
+    tension_axis.setLogMode(x=False, y=False)
+    tension_axis.setRange(t0, t1)
     return
 
 
