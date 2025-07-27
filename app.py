@@ -82,7 +82,26 @@ peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 peak_text.setFont(QFont('LiberationSans', 18))
 plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(0, 0.1)
-main_layout.addWidget(layout_plots)
+
+layout_with_slider = QtWidgets.QHBoxLayout()
+
+yscale_slider = QtWidgets.QSlider(Qt.Orientation.Vertical)
+yscale_slider.setMinimum(1)
+yscale_slider.setMaximum(100)
+yscale_slider.setValue(50)
+yscale_slider.setFixedWidth(40)
+layout_with_slider.addWidget(yscale_slider)
+
+layout_with_slider.addWidget(layout_plots)
+main_layout.addLayout(layout_with_slider)
+
+def on_yscale_changed():
+    v = yscale_slider.value()
+    plot_spectrum.setYRange(0, v / 1000)
+
+yscale_slider.valueChanged.connect(on_yscale_changed)
+on_yscale_changed()
+
 
 peak_texts = []
 corr_texts = []
