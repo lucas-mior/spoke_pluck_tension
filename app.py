@@ -124,19 +124,19 @@ frequency_axis.tickStrings = tickStrings_frequency
 plot_spectrum.setAxisItems({'bottom': frequency_axis})
 frequency_axis.setGrid(100)
 
-tension_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
+tension_newton_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
 def tickStrings_tension(values, scale, spacing):
     return [f"{round(spokes.tension(v))}N" for v in values]
-tension_axis.tickStrings = tickStrings_tension
-plot_spectrum.layout.addItem(tension_axis, 4, 1)
-tension_axis.linkToView(plot_spectrum.getViewBox())
+tension_newton_axis.tickStrings = tickStrings_tension
+plot_spectrum.layout.addItem(tension_newton_axis, 4, 1)
+tension_newton_axis.linkToView(plot_spectrum.getViewBox())
 
-tension_axis2 = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
-def tickStrings_tension2(values, scale, spacing):
+tension_kgf_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
+def tickStrings_tension_kgf(values, scale, spacing):
     return [f"{newton_kgf(spokes.tension(v))}kgf" for v in values]
-tension_axis2.tickStrings = tickStrings_tension2
-plot_spectrum.layout.addItem(tension_axis2, 5, 1)
-tension_axis2.linkToView(plot_spectrum.getViewBox())
+tension_kgf_axis.tickStrings = tickStrings_tension_kgf
+plot_spectrum.layout.addItem(tension_kgf_axis, 5, 1)
+tension_kgf_axis.linkToView(plot_spectrum.getViewBox())
 
 def on_data_available():
     f = on_data_available
@@ -294,11 +294,14 @@ def on_slider_changed():
     plot_spectrum.setLogMode(x=False, y=False)
     plot_spectrum.setXRange(f0, f1)
     tick_spacing = (frequency_max - frequency_min) / 10
-    plot_spectrum.getAxis('bottom').setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
-    tension_axis.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
-    tension_axis2.setTickSpacing(major=tick_spacing, minor=tick_spacing / 10)
+    plot_spectrum.getAxis('bottom').setTickSpacing(major=tick_spacing,
+                                                   minor=tick_spacing / 10)
+    tension_newton_axis.setTickSpacing(major=tick_spacing,
+                                       minor=tick_spacing / 10)
+    tension_kgf_axis.setTickSpacing(major=tick_spacing,
+                                    minor=tick_spacing / 10)
 
-    tension_axis2.setHeight(30)
+    tension_kgf_axis.setHeight(30)
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
