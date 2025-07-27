@@ -215,7 +215,7 @@ def on_data_available():
     matched = None
     for f_corr in fundamentals:
         for f_fft in fundamentals_fft:
-            if abs(f_corr - f_fft) < 5:
+            if abs(f_corr - f_fft) < 10:
                 matched = f_corr
                 break
 
