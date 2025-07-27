@@ -120,20 +120,33 @@ for i in range(npeaks_fft):
     peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
 
-frequency_axis = pyqtgraph.AxisItem(orientation='bottom')
+frequency_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=-5)
+
+# class pyqtgraph.AxisItem(
+# orientation: str,
+# pen=None,
+# textPen=None,
+# tickPen=None,
+# linkView=None,
+# parent=None,
+# maxTickLength=-5,
+# showValues=True,
+# **args,
+# )[source]
+
 def tickStrings_frequency(values, scale, spacing):
     return [f"{round(v)}Hz" for v in values]
 frequency_axis.tickStrings = tickStrings_frequency
 plot_spectrum.setAxisItems({'bottom': frequency_axis})
 
-tension_axis = pyqtgraph.AxisItem(orientation='bottom')
+tension_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
 def tickStrings_tension(values, scale, spacing):
     return [f"{round(spokes.tension(v))}N" for v in values]
 tension_axis.tickStrings = tickStrings_tension
 plot_spectrum.layout.addItem(tension_axis, 4, 1)
 tension_axis.linkToView(plot_spectrum.getViewBox())
 
-tension_axis2 = pyqtgraph.AxisItem(orientation='bottom')
+tension_axis2 = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
 def tickStrings_tension2(values, scale, spacing):
     return [f"{newton_kgf(spokes.tension(v))}kgf" for v in values]
 tension_axis2.tickStrings = tickStrings_tension2
