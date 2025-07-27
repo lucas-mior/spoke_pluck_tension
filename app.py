@@ -113,6 +113,13 @@ tension_axis.tickStrings = tickStrings_tension
 plot_spectrum.layout.addItem(tension_axis, 4, 1)
 tension_axis.linkToView(plot_spectrum.getViewBox())
 
+tension_axis2 = pyqtgraph.AxisItem(orientation='bottom')
+def tickStrings_tension2(values, scale, spacing):
+    return [f"{round(spokes.tension(v))}kgf" for v in values]
+tension_axis2.tickStrings = tickStrings_tension2
+plot_spectrum.layout.addItem(tension_axis2, 5, 1)
+tension_axis2.linkToView(plot_spectrum.getViewBox())
+
 def on_data_available():
     f = on_data_available
     if not hasattr(f, "spectrum_smooth"):
@@ -175,9 +182,11 @@ def on_data_available():
             frequency = fundamentals[i]
             idx = np.argmin(np.abs(f.frequencies - frequency))
             amplitude = f.spectrum_smooth[idx]
-            xloc = frequency
-            corr_texts[i].setPos(xloc, amplitude)
-            corr_texts[i].setText(f"{frequency}Hz")
+            if amplitude > 0.005:
+                corr_texts[i].setPos(frequency, amplitude)
+                corr_texts[i].setText(f"{frequency}Hz")
+            else:
+                corr_texts[i].setText("")
         else:
             corr_texts[i].setText("")
 
@@ -186,9 +195,8 @@ def on_data_available():
             idx = peaks_fft[i]
             amplitude = f.spectrum_smooth[idx]
             frequency = round(f.frequencies[idx])
-            if True or amplitude > 0.005:
-                xloc = frequency
-                peak_texts[i].setPos(xloc, amplitude)
+            if amplitude > 0.005:
+                peak_texts[i].setPos(frequency, amplitude)
                 peak_texts[i].setText(f"{frequency}Hz")
             else:
                 peak_texts[i].setText("")
@@ -247,7 +255,7 @@ def on_slider_changed():
     frequency_min = spokes.frequency(t0)
     frequency_max = spokes.frequency(t1)
     f0 = frequency_min
-    f1 = frequency_max*2
+    f1 = frequency_max
     min_lag = round(SAMPLE_RATE / f1)
     max_lag = round(SAMPLE_RATE / f0)
 
@@ -259,6 +267,9 @@ def on_slider_changed():
 
     tension_axis.setLogMode(x=False, y=False)
     tension_axis.setRange(t0, t1)
+
+    tension_axis2.setLogMode(x=False, y=False)
+    tension_axis2.setRange(round(t0 / 9.80665), round(t1 / 9.80665))
     return
 
 min_slider.valueChanged.connect(on_slider_changed)
