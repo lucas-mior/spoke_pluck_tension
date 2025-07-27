@@ -100,7 +100,6 @@ def on_yscale_changed():
 
     v = yscale_slider.value()
     amplitude_min = v/1e4
-    print(f"{amplitude_min=}")
     plot_spectrum.setYRange(0, v / 1000)
     return
 
