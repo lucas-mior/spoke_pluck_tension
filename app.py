@@ -339,7 +339,7 @@ fifo_file = os.fdopen(fifo_fd, 'rb')
 atexit.register(fifo_file.close)
 atexit.register(fifo_proc.terminate)
 
-main_window.setWindowTitle("Spoke Tension Analyzer")
+main_window.setWindowTitle("spoke_pluck_tension")
 main_window.resize(1000, 600)
 main_window.show()
 
