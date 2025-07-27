@@ -110,8 +110,7 @@ main(void) {
         error("Error opening %s: %s.\n", FIFO_PATH, strerror(errno));
         exit(EXIT_FAILURE);
     }
-
-    if ((rt_handle = rtaudio_create(RTAUDIO_API_UNSPECIFIED)) == NULL) {
+    if ((rt_handle = rtaudio_create(RTAUDIO_API_LINUX_PULSE)) == NULL) {
         error("Error initializing RtAudio.\n");
         exit(EXIT_FAILURE);
     }
