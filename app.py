@@ -274,6 +274,7 @@ def on_data_available():
 def newton2kgf(TN):
     return round(TN / 9.80665)
 
+
 def on_slider_changed():
     global frequency_min, frequency_max
     global min_lag, max_lag
