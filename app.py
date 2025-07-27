@@ -212,11 +212,16 @@ def on_data_available():
         or abs(fundamentals[0] - f.last_fundamental) > min_freq_change
     )
 
-    fft_match = any(abs(fundamentals[0] - f) < 5 for f in fundamentals_fft)
+    matched = None
+    for f_corr in fundamentals:
+        for f_fft in fundamentals_fft:
+            if abs(f_corr - f_fft) < 5:
+                matched = f_corr
+                break
 
-    if update_allowed and freq_diff_ok and fft_match:
-        if frequency_min < fundamentals[0] < frequency_max:
-            f.last_fundamentals.append(fundamentals[0])
+    if matched and update_allowed and freq_diff_ok:
+        if frequency_min < matched < frequency_max:
+            f.last_fundamentals.append(matched)
             median_freq = np.median(f.last_fundamentals)
             tension = spokes.tension(median_freq)
             f.last_fundamental = round(median_freq)
