@@ -95,8 +95,8 @@ def on_yscale_changed():
     global amplitude_min
 
     v = yscale_slider.value()
-    amplitude_min = v/1e4
-    plot_spectrum.setYRange(0, v / 1000)
+    amplitude_min = v/2e4
+    plot_spectrum.setYRange(0, v / 2000)
     return
 
 
