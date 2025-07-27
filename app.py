@@ -65,14 +65,6 @@ slider_layout.addLayout(max_slider_layout)
 
 main_layout.addLayout(slider_layout)
 
-top_indicator = QtWidgets.QLabel("Frequency: -- Hz")
-top_indicator.setStyleSheet("""
-    font-size: 22pt;
-    color: cyan;
-    background-color: black;
-""")
-main_layout.addWidget(top_indicator)
-
 layout_plots = pyqtgraph.GraphicsLayoutWidget()
 plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
 plot_spectrum_curve = plot_spectrum.plot(
@@ -281,9 +273,7 @@ def on_data_available():
 
         peak_text.setPos(xloc, spectrum_db[idx])
         peak_text.setText(indicator_text)
-        top_indicator.setText(indicator_text)
     else:
-        top_indicator.setText("Frequency: -- Hz")
         peak_text.setText("")
 
     return
