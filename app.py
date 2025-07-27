@@ -82,6 +82,7 @@ peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 peak_text.setFont(QFont('LiberationSans', 18))
 plot_spectrum.addItem(peak_text)
 plot_spectrum.setYRange(0, 0.1)
+plot_spectrum.showGrid(x=True, y=True)
 
 layout_with_slider = QtWidgets.QHBoxLayout()
 
@@ -142,6 +143,7 @@ def tickStrings_frequency(values, scale, spacing):
     return [f"{round(v)}Hz" for v in values]
 frequency_axis.tickStrings = tickStrings_frequency
 plot_spectrum.setAxisItems({'bottom': frequency_axis})
+frequency_axis.setGrid(100)
 
 tension_axis = pyqtgraph.AxisItem(orientation='bottom', maxTickLength=0)
 def tickStrings_tension(values, scale, spacing):
