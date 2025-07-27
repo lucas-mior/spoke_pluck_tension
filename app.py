@@ -100,14 +100,18 @@ for i in range(npeaks_fft):
     peak_texts.append(text_item)
     plot_spectrum.addItem(peak_texts[i])
 
-tension_axis = pyqtgraph.AxisItem(orientation='bottom')
-plot_spectrum.layout.addItem(tension_axis, 4, 1)
-tension_axis.linkToView(plot_spectrum.getViewBox())
+frequency_axis = pyqtgraph.AxisItem(orientation='bottom')
+def tickStrings_frequency(values, scale, spacing):
+    return [f"{round(v)}Hz" for v in values]
+frequency_axis.tickStrings = tickStrings_frequency
+plot_spectrum.setAxisItems({'bottom': frequency_axis})
 
+tension_axis = pyqtgraph.AxisItem(orientation='bottom')
 def tickStrings_tension(values, scale, spacing):
     return [f"{round(spokes.tension(v))}N" for v in values]
-
 tension_axis.tickStrings = tickStrings_tension
+plot_spectrum.layout.addItem(tension_axis, 4, 1)
+tension_axis.linkToView(plot_spectrum.getViewBox())
 
 def on_data_available():
     f = on_data_available
@@ -233,7 +237,6 @@ def on_data_available():
 
     return
 
-
 def on_slider_changed():
     global frequency_min, frequency_max
     global min_lag, max_lag
@@ -257,7 +260,6 @@ def on_slider_changed():
     tension_axis.setLogMode(x=False, y=False)
     tension_axis.setRange(t0, t1)
     return
-
 
 min_slider.valueChanged.connect(on_slider_changed)
 max_slider.valueChanged.connect(on_slider_changed)
