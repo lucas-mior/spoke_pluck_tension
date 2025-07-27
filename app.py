@@ -99,9 +99,9 @@ def on_yscale_changed():
     plot_spectrum.setYRange(0, v / 1000)
     return
 
+
 yscale_slider.valueChanged.connect(on_yscale_changed)
 on_yscale_changed()
-
 
 peak_texts = []
 corr_texts = []
