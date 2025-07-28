@@ -97,10 +97,15 @@ if __name__ == "__main__":
     freqs, labels = all_note_labels()
 
     for i, (f, label) in enumerate(zip(freqs, labels)):
-        align = 'right' if i % 2 == 0 else 'left'
+        if i % 2 == 0:
+            align = 'right'
+            x = -0.01
+        else:
+            align = 'left'
+            x = 0.01
         ax_n.axhline(f, linestyle='--', color='gray', linewidth=0.5, alpha=0.3)
         ax_n.text(
-            x=1.0, y=f, s=label,
+            x=1.0+x, y=f, s=label,
             transform=ax_n.get_yaxis_transform(),
             va='center',
             ha=align,
