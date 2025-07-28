@@ -67,6 +67,42 @@ if __name__ == "__main__":
     )
     ax_kgf.set_xlabel("Tension (kgf)")
 
+    note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    start_freq = 196  # G3
+    start_index = note_names.index('G')
+    start_octave = 3
+
+    def all_note_labels():
+        freqs = []
+        labels = []
+        freq = start_freq
+        index = start_index
+        octave = start_octave
+        while freq <= ax_n.get_ylim()[1]:
+            name = note_names[index] + str(octave)
+            freqs.append(freq)
+            labels.append(name)
+            freq *= 2 ** (1/12)
+            index += 1
+            if index == 12:
+                index = 0
+                octave += 1
+        return freqs, labels
+
+    freqs, labels = all_note_labels()
+
+    for i, (f, label) in enumerate(zip(freqs, labels)):
+        align = 'right' if i % 2 == 0 else 'left'
+        ax_n.axhline(f, linestyle='--', color='gray', linewidth=0.5, alpha=0.3)
+        ax_n.text(
+            x=1.01, y=f, s=label,
+            transform=ax_n.get_yaxis_transform(),
+            va='center',
+            ha=align,
+            fontsize=8,
+            clip_on=False
+        )
+
     ax_n.legend(title='Spoke Length')
     fig.tight_layout()
     plt.show()
