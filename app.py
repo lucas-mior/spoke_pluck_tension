@@ -91,6 +91,35 @@ layout_with_slider.addWidget(yscale_slider)
 layout_with_slider.addWidget(layout_plots)
 main_layout.addLayout(layout_with_slider)
 
+spoke_input_layout = QtWidgets.QHBoxLayout()
+spoke_label = QtWidgets.QLabel("Spoke Length (cm):")
+spoke_input = QtWidgets.QLineEdit()
+spoke_input.setPlaceholderText(f"{round(spokes.SPOKE_LENGTH*100, 1)}")
+spoke_input.returnPressed.connect(lambda: update_spoke_length(spoke_input.text()))
+
+spoke_input_layout.addWidget(spoke_label)
+spoke_input_layout.addWidget(spoke_input)
+main_layout.addLayout(spoke_input_layout)
+
+def update_spoke_length(text):
+    try:
+        value = float(text)
+    except Exception:
+        QtWidgets.QMessageBox.warning(main_window,
+                                      "Invalid Input",
+                                      "Enter spoke length in centimeters.")
+        return
+
+    if value <= 1 or value >= 100:
+        QtWidgets.QMessageBox.warning(main_window,
+                                      "Invalid Input",
+                                      f"Invalid spoke length: {value}cm.")
+        return
+
+    spokes.SPOKE_LENGTH = value/100
+    spoke_input.setPlaceholderText(f"{value}")
+    return
+
 def on_yscale_changed():
     global amplitude_min
 
