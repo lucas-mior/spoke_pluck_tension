@@ -140,10 +140,10 @@ def on_yscale_changed():
     global amplitude_min
 
     v = yscale_slider.value()
-    amplitude_min = v / 2e4
-    plot_spectrum.setYRange(0, v / 2000)
-    yscale_label.setText(f"Gain^(-1): {v}")
-    return
+    gain = (101 - v)
+    amplitude_min = gain / 2e4
+    plot_spectrum.setYRange(0, gain / 2000)
+    yscale_label.setText(f"Gain: {v}")
 
 
 yscale_slider.valueChanged.connect(on_yscale_changed)
