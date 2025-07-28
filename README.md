@@ -43,14 +43,19 @@ You should set the spoke parameters in `spokes.py`. The most relevant are:
    or until the hub flange (if not interlaced).
 
 # Extra details
-This program works better in very quiet environments.  I have tested the app
-only with my own (bad) internal computer mic and for a specific spoke
-configuration, so it may need some tweaking to work properly with your setup.
-Also, you shoud not rely only on this program's measurements when
-tensioning/truing a wheel. Combine it with a traditional spring tensiometer,
-your own ears and you hands feel. From what I've tested, this program is
-accurate and precise for high tensions (> 800N). Lower tension measurements tend
-to be more error prone.
+This program works best in quiet environments, but I found that even with
+significant background noise, it can perform well by holding the rim against a
+wooden table where your computer or microphone is placed. Using only the air as
+a sound conductor is less effective.
+
+I have tested the app only with my (poor-quality) internal computer microphone
+and for a specific spoke configuration, so you may need to tweak it to work
+properly with your setup. Also, you should not rely solely on this program’s
+measurements when tensioning or truing a wheel. Combine it with a traditional
+spring tensiometer, your own ears, and your hands feel.
+
+From my tests, this program is accurate and precise for high tensions (above 800
+N). Measurements at lower tensions tend to be more error-prone.
 
 ## Dive deeper into the subject
 - [Blog post about measuring spoke tension](https://savetheneurons.blogspot.com/2019/01/your-spoke-tension-meter-is-probably.html)
