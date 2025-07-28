@@ -101,6 +101,7 @@ spoke_input_layout.addWidget(spoke_label)
 spoke_input_layout.addWidget(spoke_input)
 main_layout.addLayout(spoke_input_layout)
 
+
 def update_spoke_length(text):
     try:
         value = float(text)
@@ -119,6 +120,7 @@ def update_spoke_length(text):
     spokes.SPOKE_LENGTH = value/100
     spoke_input.setPlaceholderText(f"{value}")
     return
+
 
 def on_yscale_changed():
     global amplitude_min
