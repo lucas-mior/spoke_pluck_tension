@@ -45,7 +45,8 @@ if __name__ == "__main__":
         else:
             linestyle = '--'
         line, = ax_n.plot(tension_values, freq_values,
-                          label=f'{length * 100:.0f} cm', linewidth=2, linestyle=linestyle)
+                          label=f'{length * 100:.0f} cm',
+                          linewidth=2, linestyle=linestyle)
 
         color = line.get_color()
 
