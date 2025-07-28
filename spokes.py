@@ -22,7 +22,7 @@ def frequency(tension, length=SPOKE_LENGTH):
 
 
 def newton2kgf(TN):
-    return TN  / 9.80665
+    return TN / 9.80665
 
 
 def kgf2newton(Tkgf):
