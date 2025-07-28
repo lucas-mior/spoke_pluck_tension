@@ -39,7 +39,8 @@ if __name__ == "__main__":
 
     for length in lengths:
         freq_values = frequency(tension_values, length)
-        line, = ax_n.plot(tension_values, freq_values, label=f'{length * 100:.0f} cm')
+        line, = ax_n.plot(tension_values, freq_values,
+                          label=f'{length * 100:.0f} cm')
 
         color = line.get_color()
 
