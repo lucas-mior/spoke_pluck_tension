@@ -56,3 +56,4 @@ to be more error prone.
 - [Blog post about measuring spoke tension](https://savetheneurons.blogspot.com/2019/01/your-spoke-tension-meter-is-probably.html)
 - [Sheldon Brown on checking spoke tension by ear](https://www.sheldonbrown.com/spoke-pitch.html)
 - [Comparison of measurements of bicycle spoke tension using a mechanical tensiometer and musical pitch](https://www.ihpva.org/HParchive/PDF/hp53-2002.pdf)
+- [Forum thread about proper measurement](https://www.bikegremlin.net/threads/how-to-measure-spoke-tension-properly.370/)
