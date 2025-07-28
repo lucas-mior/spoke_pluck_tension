@@ -94,7 +94,8 @@ yscale_label = QtWidgets.QLabel("Y Scale")
 yscale_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
 yscale_slider_layout.addWidget(yscale_label)
-yscale_slider_layout.addWidget(yscale_slider, alignment=Qt.AlignmentFlag.AlignHCenter)
+yscale_slider_layout.addWidget(yscale_slider,
+                               alignment=Qt.AlignmentFlag.AlignHCenter)
 
 yscale_slider_widget = QtWidgets.QWidget()
 yscale_slider_widget.setLayout(yscale_slider_layout)
