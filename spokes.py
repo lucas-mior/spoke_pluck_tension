@@ -36,7 +36,7 @@ if __name__ == "__main__":
     acceptable_tension_min = 900
     acceptable_tension_max = 1200
 
-    fig, ax_n = plt.subplots(figsize=(8, 5))
+    fig, ax_n = plt.subplots(figsize=(8, 8))
 
     for i, length in enumerate(lengths):
         freq_values = frequency(tension_values, length)
