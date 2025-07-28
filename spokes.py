@@ -21,12 +21,12 @@ def frequency(tension, length=SPOKE_LENGTH):
     return np.int32(np.round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
 
 
-def newton2kgf(t):
-    return t / 9.80665
+def newton2kgf(TN):
+    return TN  / 9.80665
 
 
-def kgf2newton(k):
-    return k * 9.80665
+def kgf2newton(Tkgf):
+    return Tkgf * 9.80665
 
 
 if __name__ == "__main__":
