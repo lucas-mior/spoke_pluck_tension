@@ -73,7 +73,13 @@ if __name__ == "__main__":
     )
     ax_kgf.set_xlabel("Tension (kgf)")
 
-    note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    note_names = ['C', 'C#',
+                  'D', 'D#',
+                  'E',
+                  'F', 'F#',
+                  'G', 'G#',
+                  'A', 'A#',
+                  'B']
     start_freq = 196  # G3
     start_index = note_names.index('G')
     start_octave = 3
