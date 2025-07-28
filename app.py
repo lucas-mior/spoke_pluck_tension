@@ -86,7 +86,20 @@ yscale_slider.setMinimum(1)
 yscale_slider.setMaximum(100)
 yscale_slider.setValue(50)
 yscale_slider.setFixedWidth(40)
-layout_with_slider.addWidget(yscale_slider)
+
+yscale_slider_layout = QtWidgets.QVBoxLayout()
+yscale_slider_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+yscale_label = QtWidgets.QLabel("Y Scale")
+yscale_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+yscale_slider_layout.addWidget(yscale_label)
+yscale_slider_layout.addWidget(yscale_slider, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+yscale_slider_widget = QtWidgets.QWidget()
+yscale_slider_widget.setLayout(yscale_slider_layout)
+
+layout_with_slider.addWidget(yscale_slider_widget)
 
 layout_with_slider.addWidget(layout_plots)
 main_layout.addLayout(layout_with_slider)
