@@ -103,6 +103,7 @@ if __name__ == "__main__":
             clip_on=False
         )
 
-    ax_n.legend(title='Spoke Length')
+    handles, labels = ax_n.get_legend_handles_labels()
+    ax_n.legend(handles, labels[::-1], title='Spoke Length')
     fig.tight_layout()
     plt.show()
