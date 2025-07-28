@@ -13,15 +13,15 @@ SPOKE_LENGTH = 0.18
 
 
 def tension(frequency, length=SPOKE_LENGTH):
-    return int(round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
+    return np.int32(np.round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
 
 
 def frequency(tension, length=SPOKE_LENGTH):
-    return int(round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
+    return np.int32(np.round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
 
 
 if __name__ == "__main__":
-    tension_values = np.linspace(50, 3000, 500)
+    tension_values = np.linspace(start=50, stop=2000, num=1200)
     lengths = [0.15, 0.18, 0.20, 0.22, 0.25]
 
     acceptable_tension_min = 900
