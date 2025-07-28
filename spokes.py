@@ -24,6 +24,10 @@ def newton2kgf(t):
     return t / 9.80665
 
 
+def kgf2newton(k):
+    return k * 9.80665
+
+
 if __name__ == "__main__":
     tension_values = np.linspace(start=50, stop=2000, num=1200)
     lengths = [0.15, 0.18, 0.20, 0.22, 0.25]
@@ -50,18 +54,17 @@ if __name__ == "__main__":
             alpha=0.2
         )
 
-    ax_n.set_xlabel('Tension (N)')
+    ax_n.xaxis.set_label_position('top')
+    ax_n.xaxis.tick_top()
+    ax_n.set_xlabel('Tension (N)', labelpad=10)
     ax_n.set_ylabel('Frequency (Hz)')
-    ax_n.set_title('Frequency vs. Tension for Different Spoke Lengths')
     ax_n.grid(True)
 
     ax_kgf = ax_n.secondary_xaxis(
         location='bottom',
-        functions=(newton2kgf, lambda kgf: kgf * 9.80665)
+        functions=(newton2kgf, kgf2newton)
     )
     ax_kgf.set_xlabel("Tension (kgf)")
-
-    ax_n.spines['bottom'].set_position(('outward', 30))
 
     ax_n.legend(title='Spoke Length')
     fig.tight_layout()
