@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 14})
 
 TENSION_MIN = 400
 TENSION_MAX = 2000
@@ -29,7 +30,7 @@ def kgf2newton(k):
 
 
 if __name__ == "__main__":
-    tension_values = np.linspace(start=50, stop=2000, num=1200)
+    tension_values = np.linspace(start=250, stop=2000, num=1200)
     lengths = [0.10, 0.15, 0.18, 0.20, 0.22, 0.25, 0.30]
 
     acceptable_tension_min = 900
@@ -37,10 +38,14 @@ if __name__ == "__main__":
 
     fig, ax_n = plt.subplots(figsize=(8, 5))
 
-    for length in lengths:
+    for i, length in enumerate(lengths):
         freq_values = frequency(tension_values, length)
+        if i % 2 == 0:
+            linestyle = '-'
+        else:
+            linestyle = '--'
         line, = ax_n.plot(tension_values, freq_values,
-                          label=f'{length * 100:.0f} cm')
+                          label=f'{length * 100:.0f} cm', linewidth=2, linestyle=linestyle)
 
         color = line.get_color()
 
@@ -104,6 +109,6 @@ if __name__ == "__main__":
         )
 
     handles, labels = ax_n.get_legend_handles_labels()
-    ax_n.legend(handles, labels[::-1], title='Spoke Length')
+    ax_n.legend(handles, labels, title='Spoke Length')
     fig.tight_layout()
     plt.show()
