@@ -30,7 +30,7 @@ def kgf2newton(k):
 
 if __name__ == "__main__":
     tension_values = np.linspace(start=50, stop=2000, num=1200)
-    lengths = [0.15, 0.18, 0.20, 0.22, 0.25]
+    lengths = [0.10, 0.15, 0.18, 0.20, 0.22, 0.25, 0.30]
 
     acceptable_tension_min = 900
     acceptable_tension_max = 1200
@@ -95,11 +95,11 @@ if __name__ == "__main__":
         align = 'right' if i % 2 == 0 else 'left'
         ax_n.axhline(f, linestyle='--', color='gray', linewidth=0.5, alpha=0.3)
         ax_n.text(
-            x=1.01, y=f, s=label,
+            x=1.0, y=f, s=label,
             transform=ax_n.get_yaxis_transform(),
             va='center',
             ha=align,
-            fontsize=8,
+            fontsize=12,
             clip_on=False
         )
 
