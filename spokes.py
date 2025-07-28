@@ -78,24 +78,20 @@ if __name__ == "__main__":
     start_index = note_names.index('G')
     start_octave = 3
 
-    def all_note_labels():
-        freqs = []
-        labels = []
-        freq = start_freq
-        index = start_index
-        octave = start_octave
-        while freq <= ax_n.get_ylim()[1]:
-            name = note_names[index] + str(octave)
-            freqs.append(freq)
-            labels.append(name)
-            freq *= 2 ** (1/12)
-            index += 1
-            if index == 12:
-                index = 0
-                octave += 1
-        return freqs, labels
-
-    freqs, labels = all_note_labels()
+    freqs = []
+    labels = []
+    freq = start_freq
+    index = start_index
+    octave = start_octave
+    while freq <= ax_n.get_ylim()[1]:
+        name = note_names[index] + str(octave)
+        freqs.append(freq)
+        labels.append(name)
+        freq *= 2 ** (1/12)
+        index += 1
+        if index == 12:
+            index = 0
+            octave += 1
 
     for i, (f, label) in enumerate(zip(freqs, labels)):
         if i % 2 == 0:
