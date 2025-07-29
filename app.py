@@ -199,7 +199,7 @@ def on_data_available():
         f.last_tension = None
         f.last_time = time.time()*1000
         f.last_update = time.time()*1000
-        f.last_fundamentals = collections.deque(maxlen=3)
+        f.last_fundamentals = collections.deque(maxlen=1)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -266,21 +266,21 @@ def on_data_available():
             else:
                 corr_texts[i].setText("")
 
-    for i in range(npeaks_fft):
-        if i < len(peaks_fft):
-            idx = peaks_fft[i]
-            amplitude = f.spectrum_smooth[idx]
-            frequency = round(f.frequencies[idx])
-            if amplitude > amplitude_min:
-                peak_texts[i].setPos(frequency, amplitude)
-                peak_texts[i].setText(f"{frequency}Hz")
+        for i in range(npeaks_fft):
+            if i < len(peaks_fft):
+                idx = peaks_fft[i]
+                amplitude = f.spectrum_smooth[idx]
+                frequency = round(f.frequencies[idx])
+                if amplitude > amplitude_min:
+                    peak_texts[i].setPos(frequency, amplitude)
+                    peak_texts[i].setText(f"{frequency}Hz")
+                else:
+                    peak_texts[i].setText("")
             else:
                 peak_texts[i].setText("")
-        else:
-            peak_texts[i].setText("")
 
     if len(fundamentals) == 0:
-        print("no correlation fundamentals")
+        # print("no correlation fundamentals")
         return
 
     now = int(time.time()*1000)
@@ -288,10 +288,10 @@ def on_data_available():
     update_allowed = True
 
     print(f"corr[{len(fundamentals)}] = {fundamentals}")
-    print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
+    # print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
     for f_corr in fundamentals:
-        tol = f_corr*0.1
+        tol = f_corr*0.03
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
             A = f.spectrum_smooth[idx]
