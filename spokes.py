@@ -80,7 +80,7 @@ if __name__ == "__main__":
                   'G', 'G#',
                   'A', 'A#',
                   'B']
-    start_freq = 196  # G3
+    start_freq = 195.99772  # G3
     start_index = note_names.index('G')
     start_octave = 3
 
