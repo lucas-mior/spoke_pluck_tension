@@ -240,7 +240,7 @@ def on_data_available():
     corr = corr[min_lag:max_lag]
 
     peaks_corr, _ = scipy.signal.find_peaks(corr)
-    fundamentals = []
+    fundamentals_corr = []
     if len(peaks_corr) > 0:
         top_peaks = peaks_corr[np.argsort(-corr[peaks_corr])[:npeaks_corr]]
         for p in top_peaks:
@@ -250,12 +250,12 @@ def on_data_available():
                 y0, y1, y2 = corr[p - 1], corr[p], corr[p + 1]
                 d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
                 lag = (p + d) + min_lag
-            fundamentals.append(round(SAMPLE_RATE / lag))
+            fundamentals_corr.append(round(SAMPLE_RATE / lag))
 
     if DEBUG:
         for i in range(npeaks_corr):
-            if i < len(fundamentals):
-                frequency = fundamentals[i]
+            if i < len(fundamentals_corr):
+                frequency = fundamentals_corr[i]
                 idx = np.argmin(np.abs(f.frequencies - frequency))
                 amplitude = f.spectrum_smooth[idx]
                 if amplitude > amplitude_min:
@@ -279,18 +279,18 @@ def on_data_available():
             else:
                 peak_texts[i].setText("")
 
-    if len(fundamentals) == 0:
-        # print("no correlation fundamentals")
+    if len(fundamentals_corr) == 0:
+        # print("no correlation fundamentals_corr")
         return
 
     now = int(time.time()*1000)
     # update_allowed = (now - f.last_update) > min_update_interval
     update_allowed = True
 
-    print(f"corr[{len(fundamentals)}] = {fundamentals}")
+    print(f"corr[{len(fundamentals_corr)}] = {fundamentals_corr}")
     # print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
-    for f_corr in fundamentals:
+    for f_corr in fundamentals_corr:
         tol = f_corr*0.03
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
