@@ -234,6 +234,7 @@ def on_data_available():
     if corr_max := np.max(corr) > 0:
         corr /= corr_max
     else:
+        print("early return")
         return
 
     corr = corr[min_lag:max_lag]
@@ -257,7 +258,7 @@ def on_data_available():
                 frequency = fundamentals[i]
                 idx = np.argmin(np.abs(f.frequencies - frequency))
                 amplitude = f.spectrum_smooth[idx]
-                if amplitude > 0.001:
+                if amplitude > amplitude_min:
                     corr_texts[i].setPos(frequency, amplitude)
                     corr_texts[i].setText(f"{frequency}Hz")
                 else:
@@ -265,20 +266,21 @@ def on_data_available():
             else:
                 corr_texts[i].setText("")
 
-        for i in range(npeaks_fft):
-            if i < len(peaks_fft):
-                idx = peaks_fft[i]
-                amplitude = f.spectrum_smooth[idx]
-                frequency = round(f.frequencies[idx])
-                if amplitude > 0.001:
-                    peak_texts[i].setPos(frequency, amplitude)
-                    peak_texts[i].setText(f"{frequency}Hz")
-                else:
-                    peak_texts[i].setText("")
+    for i in range(npeaks_fft):
+        if i < len(peaks_fft):
+            idx = peaks_fft[i]
+            amplitude = f.spectrum_smooth[idx]
+            frequency = round(f.frequencies[idx])
+            if amplitude > amplitude_min:
+                peak_texts[i].setPos(frequency, amplitude)
+                peak_texts[i].setText(f"{frequency}Hz")
             else:
                 peak_texts[i].setText("")
+        else:
+            peak_texts[i].setText("")
 
     if len(fundamentals) == 0:
+        print("no correlation fundamentals")
         return
 
     now = int(time.time()*1000)
@@ -287,10 +289,11 @@ def on_data_available():
 
     matched = None
     for f_corr in fundamentals:
+        tol = f_corr*0.1
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
             A = f.spectrum_smooth[idx]
-            if abs(f_corr - f_fft) < 10 and A > amplitude_min:
+            if abs(f_corr - f_fft) < tol and A > amplitude_min:
                 matched = f_corr
                 break
 
