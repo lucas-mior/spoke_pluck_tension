@@ -199,7 +199,7 @@ def on_data_available():
         f.last_tension = None
         f.last_time = time.time()*1000
         f.last_update = time.time()*1000
-        f.last_fundamentals = collections.deque(maxlen=1)
+        f.last_fundamentals = collections.deque(maxlen=3)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -282,7 +282,8 @@ def on_data_available():
         return
 
     now = int(time.time()*1000)
-    update_allowed = (now - f.last_update) > min_update_interval
+    # update_allowed = (now - f.last_update) > min_update_interval
+    update_allowed = True
 
     matched = None
     for f_corr in fundamentals:
@@ -363,7 +364,7 @@ max_slider.valueChanged.connect(on_slider_changed)
 
 on_slider_changed()
 
-hold_duration = 2000
+hold_duration = 1500
 min_update_interval = 600
 
 fifo_path = "/tmp/audio_fifo"
