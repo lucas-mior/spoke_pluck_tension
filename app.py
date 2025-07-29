@@ -221,7 +221,8 @@ def on_data_available():
 
     peaks_fft, _ = scipy.signal.find_peaks(f.spectrum_smooth)
     peaks_fft = peaks_fft[np.argsort(-f.spectrum_smooth[peaks_fft])][:npeaks_fft]
-    fundamentals_fft = np.array([round(f.frequencies[idx]) for idx in peaks_fft])
+    fundamentals_fft = [round(f.frequencies[idx]) for idx in peaks_fft]
+    fundamentals_fft = np.array(fundamentals_fft)
     fundamentals_fft = fundamentals_fft[fundamentals_fft > frequency_min]
     fundamentals_fft = fundamentals_fft[fundamentals_fft < frequency_max]
 
@@ -234,7 +235,6 @@ def on_data_available():
     if corr_max := np.max(corr) > 0:
         corr /= corr_max
     else:
-        print("early return")
         return
 
     corr = corr[min_lag:max_lag]
@@ -287,6 +287,8 @@ def on_data_available():
     # update_allowed = (now - f.last_update) > min_update_interval
     update_allowed = True
 
+    print(f"corr[{len(fundamentals)}] = {fundamentals}")
+    print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
     for f_corr in fundamentals:
         tol = f_corr*0.1
