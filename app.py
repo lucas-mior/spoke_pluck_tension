@@ -200,6 +200,7 @@ def on_data_available():
         f.last_time = time.time()*1000
         f.last_update = time.time()*1000
         f.last_fundamentals = collections.deque(maxlen=1)
+        f.last_corrs = collections.deque(maxlen=10)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -251,6 +252,8 @@ def on_data_available():
                 d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
                 lag = (p + d) + min_lag
             fundamentals_corr.append(round(SAMPLE_RATE / lag))
+        f.last_corrs.append(round(SAMPLE_RATE / lag))
+    print(f"{np.median(f.last_corrs)=}")
 
     if DEBUG:
         for i in range(npeaks_corr):
