@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 14})
 
-TENSION_MIN = 400
+TENSION_MIN = 300
 TENSION_MAX = 2000
 TENSION_AVG = round((TENSION_MIN + TENSION_MAX)/2)
 

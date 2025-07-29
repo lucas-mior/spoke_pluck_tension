@@ -38,7 +38,7 @@ main_window = QtWidgets.QWidget()
 main_layout = QtWidgets.QVBoxLayout()
 main_window.setLayout(main_layout)
 main_window.setWindowTitle("spoke_pluck_tension")
-main_window.resize(1000, 600)
+main_window.resize(1280, 720)
 main_window.show()
 
 slider_layout = QtWidgets.QVBoxLayout()
@@ -73,6 +73,9 @@ plot_spectrum = layout_plots.addPlot(title="Frequency Spectrum")
 plot_spectrum_curve = plot_spectrum.plot(
     pen=pyqtgraph.mkPen('y', width=3, join=Qt.PenJoinStyle.RoundJoin)
 )
+threshold_line = pyqtgraph.InfiniteLine(pos=0, angle=0,
+                                        pen=pyqtgraph.mkPen('cyan', width=2, style=Qt.PenStyle.DashLine))
+plot_spectrum.addItem(threshold_line)
 peak_text = pyqtgraph.TextItem('', anchor=(0.5, 1.5), color='cyan')
 peak_text.setFont(QFont('LiberationSans', 18))
 plot_spectrum.addItem(peak_text)
@@ -138,12 +141,12 @@ def update_spoke_length(text):
 
 def on_yscale_changed():
     global amplitude_min
-
     v = yscale_slider.value()
-    gain = (101 - v)
-    amplitude_min = gain / 2e4
-    plot_spectrum.setYRange(0, gain / 2000)
-    yscale_label.setText(f"Gain: {v}")
+    amplitude_min = v / 2e4
+    plot_spectrum.setYRange(0, v / 2000)
+    yscale_label.setText(f"Threshold: {v}")
+    threshold_line.setPos(amplitude_min)
+    return
 
 
 yscale_slider.valueChanged.connect(on_yscale_changed)
