@@ -200,7 +200,7 @@ def on_data_available():
         f.last_time = time.time()*1000
         f.last_update = time.time()*1000
         f.last_fundamentals = collections.deque(maxlen=1)
-        f.last_corrs = collections.deque(maxlen=10)
+        # f.last_corrs = collections.deque(maxlen=10)
 
     try:
         signal = fifo_file.read(FRAMES_PER_BUFFER*2)
@@ -252,8 +252,8 @@ def on_data_available():
                 d = 0.5*(y0 - y2) / (y0 - 2*y1 + y2)
                 lag = (p + d) + min_lag
             fundamentals_corr.append(round(SAMPLE_RATE / lag))
-        f.last_corrs.append(round(SAMPLE_RATE / lag))
-    print(f"{np.median(f.last_corrs)=}")
+        # f.last_corrs.append(round(SAMPLE_RATE / lag))
+    # print(f"{np.median(f.last_corrs)=}")
 
     if DEBUG:
         for i in range(npeaks_corr):
@@ -290,11 +290,11 @@ def on_data_available():
     # update_allowed = (now - f.last_update) > min_update_interval
     update_allowed = True
 
-    print(f"corr[{len(fundamentals_corr)}] = {fundamentals_corr}")
+    # print(f"corr[{len(fundamentals_corr)}] = {fundamentals_corr}")
     # print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
     for f_corr in fundamentals_corr:
-        tol = f_corr*0.03
+        tol = f_corr*0.02
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
             A = f.spectrum_smooth[idx]
