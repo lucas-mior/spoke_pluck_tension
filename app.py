@@ -32,6 +32,8 @@ for line in Cfile:
             SAMPLE_RATE = int(parts[2])
         case "FRAMES_PER_BUFFER":
             FRAMES_PER_BUFFER = int(parts[2])
+RESOLUTION = SAMPLE_RATE/FRAMES_PER_BUFFER
+print(f"{RESOLUTION=}")
 
 qt_application = QtWidgets.QApplication([])
 main_window = QtWidgets.QWidget()
@@ -294,7 +296,7 @@ def on_data_available():
     # print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
     for f_corr in fundamentals_corr:
-        tol = f_corr*0.05
+        tol = RESOLUTION
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
             A = f.spectrum_smooth[idx]
