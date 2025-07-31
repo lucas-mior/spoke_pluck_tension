@@ -294,7 +294,7 @@ def on_data_available():
     # print(f"fft[{len(fundamentals_fft)}] = {fundamentals_fft}")
     matched = None
     for f_corr in fundamentals_corr:
-        tol = f_corr*0.02
+        tol = f_corr*0.05
         for f_fft in fundamentals_fft:
             idx = np.argmin(np.abs(f.frequencies - f_fft))
             A = f.spectrum_smooth[idx]
