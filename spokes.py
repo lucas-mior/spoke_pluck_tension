@@ -19,11 +19,13 @@ def update_length(new_length):
     return
 
 
-def tension(frequency, length=SPOKE_LENGTH):
+def tension(frequency):
+    length = SPOKE_LENGTH
     return np.int32(np.round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
 
 
-def frequency(tension, length=SPOKE_LENGTH):
+def frequency(tension):
+    length = SPOKE_LENGTH
     return np.int32(np.round(np.sqrt(tension / MU_STEEL_2mm) / (2*length)))
 
 
