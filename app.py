@@ -114,14 +114,14 @@ spoke_input_layout = QtWidgets.QHBoxLayout()
 spoke_label = QtWidgets.QLabel("Spoke Length (cm):")
 spoke_input = QtWidgets.QLineEdit()
 spoke_input.setPlaceholderText(f"{round(spokes.SPOKE_LENGTH*100, 1)}")
-spoke_input.returnPressed.connect(lambda: update_spoke_length(spoke_input.text()))
+spoke_input.returnPressed.connect(lambda: on_spoke_length_changed(spoke_input.text()))
 
 spoke_input_layout.addWidget(spoke_label)
 spoke_input_layout.addWidget(spoke_input)
 main_layout.addLayout(spoke_input_layout)
 
 
-def update_spoke_length(text):
+def on_spoke_length_changed(text):
     try:
         value = float(text)
     except Exception:
@@ -136,8 +136,10 @@ def update_spoke_length(text):
                                       f"Invalid spoke length: {value}cm.")
         return
 
-    spokes.SPOKE_LENGTH = value/100
+    spokes.update_length(value/100)
     spoke_input.setPlaceholderText(f"{value}")
+    on_yscale_changed()
+    on_slider_changed()
     return
 
 

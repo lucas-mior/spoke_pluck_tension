@@ -13,6 +13,12 @@ MU_STEEL_2mm = STEEL_DENSITY*SPOKE_CROSS_SECTION
 SPOKE_LENGTH = 0.18
 
 
+def update_length(new_length):
+    global SPOKE_LENGTH
+    SPOKE_LENGTH = new_length
+    return
+
+
 def tension(frequency, length=SPOKE_LENGTH):
     return np.int32(np.round(4*(length**2)*(frequency**2)*MU_STEEL_2mm))
 
