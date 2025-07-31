@@ -224,7 +224,20 @@ def on_data_available():
 
     peaks_fft, _ = scipy.signal.find_peaks(f.spectrum_smooth)
     peaks_fft = peaks_fft[np.argsort(-f.spectrum_smooth[peaks_fft])][:npeaks_fft]
-    fundamentals_fft = [round(f.frequencies[idx]) for idx in peaks_fft]
+
+    fundamentals_fft = []
+    for idx in peaks_fft:
+        if idx <= 0 or idx >= len(f.spectrum_smooth) - 1:
+            freq = f.frequencies[idx]
+        else:
+            y0 = f.spectrum_smooth[idx - 1]
+            y1 = f.spectrum_smooth[idx]
+            y2 = f.spectrum_smooth[idx + 1]
+            d = 0.5 * (y0 - y2) / (y0 - 2 * y1 + y2)
+            bin_interp = idx + d
+            freq = np.interp(bin_interp, np.arange(len(f.frequencies)), f.frequencies)
+        fundamentals_fft.append(round(freq))
+
     fundamentals_fft = np.array(fundamentals_fft)
     fundamentals_fft = fundamentals_fft[fundamentals_fft > frequency_min]
     fundamentals_fft = fundamentals_fft[fundamentals_fft < frequency_max]
