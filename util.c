@@ -49,12 +49,7 @@
 #endif
 #ifndef ARRAY_STRING
 #define ARRAY_STRING(BUFFER, SEP, ARRAY, LENGTH) \
-  _Generic((ARRAY), \
-    int *: array_string(BUFFER, sizeof(BUFFER), SEP, "%d", ARRAY, LENGTH), \
-    float *: array_string(BUFFER, sizeof(BUFFER), SEP, "%f", ARRAY, LENGTH), \
-    double *: array_string(BUFFER, sizeof(BUFFER), SEP, "%f", ARRAY, LENGTH), \
-    char **: array_string(BUFFER, sizeof(BUFFER), SEP, "%s", ARRAY, LENGTH) \
-  )
+    array_string(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
 #endif
 
 #ifndef DEBUGGING
@@ -112,7 +107,7 @@ static char *xstrdup(char *);
 static int32 snprintf2(char *, size_t, char *, ...);
 static void error(char *, ...);
 static void fatal(int) __attribute__((noreturn));
-static void array_string(char *, int32, char *, char *, char **, int32);
+static void array_string(char *, int32, char *, char **, int32);
 static int32 util_copy_file(const char *, const char *);
 static int32 util_string_int32(int32 *, const char *);
 static int util_command(const int, char **);
@@ -383,34 +378,31 @@ util_command(const int argc, char **argv) {
 #endif
 
 void array_string(char *buffer, int32 size,
-                  char *sep, char *formatter,
-                  char **array, int32 array_length) {
-    char format_string[16];
+                  char *sep, char **array, int32 array_length) {
     int32 n = 0;
-    SNPRINTF(format_string, "%s%%s", formatter);
 
     for (int32 i = 0; i < (array_length - 1); i += 1) {
         int32 space = size - n;
-        int32 m = snprintf(buffer + n, (ulong)space, "%s%s", array[i], sep);
+        int32 m = snprintf(buffer + n, (size_t)space, "%s%s", array[i], sep);
         if (m <= 0) {
             error("Error in snprintf().\n");
             fatal(EXIT_FAILURE);
         }
-        if (m > space) {
-            error("Error printing full command, not enough space.\n");
+        if (m >= space) {
+            error("Error printing array, not enough space.\n");
             fatal(EXIT_FAILURE);
         }
         n += m;
     }{
         int32 i = array_length - 1;
         int32 space = size - n;
-        int32 m = snprintf(buffer + n, (ulong)space, "%s", array[i]);
+        int32 m = snprintf(buffer + n, (size_t)space, "%s", array[i]);
         if (m <= 0) {
             error("Error in snprintf().\n");
             fatal(EXIT_FAILURE);
         }
-        if (m > space) {
-            error("Error printing full command, not enough space.\n");
+        if (m >= space) {
+            error("Error printing array, not enough space.\n");
             fatal(EXIT_FAILURE);
         }
     }
@@ -444,6 +436,7 @@ error(char *format, ...) {
 void
 fatal(int status) {
 #ifdef DEBUGGING
+    (void) status;
     abort();
 #else
     exit(status);
