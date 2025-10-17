@@ -3,7 +3,6 @@ CC = clang
 CFLAGS = -g -O3 -march=native -fPIC -flto -D_DEFAULT_SOURCE
 CFLAGS += -Wall -Wextra -Wno-unsafe-buffer-usage -Wno-unused-macros -Wno-unused-function
 CFLAGS += -Weverything -Wno-format-nonliteral
-CFLAGS += -Wfatal-errors -Werror
 
 LDFLAGS = -lm -lrtaudio
 

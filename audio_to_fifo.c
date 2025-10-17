@@ -10,7 +10,7 @@
 #include <time.h>
 #include <rtaudio/rtaudio_c.h>
 
-typedef int16_t int16;
+#include "util.c"
 
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 4096
@@ -19,47 +19,6 @@ typedef int16_t int16;
 
 static atomic_int had_overflow = 0;
 static volatile sig_atomic_t running = 1;
-
-#ifndef INTEGERS
-#define INTEGERS
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ulonglong;
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef size_t usize;
-typedef ssize_t isize;
-#endif
-
-static void
-error(char *format, ...) {
-    char buffer[BUFSIZ];
-    va_list args;
-    int32 n;
-
-    va_start(args, format);
-    n = vsnprintf(buffer, sizeof(buffer) - 1, format, args);
-    va_end(args);
-
-    if (n < 0 || n > (int32)sizeof(buffer)) {
-        fprintf(stderr, "Error in vsnprintf()\n");
-        exit(EXIT_FAILURE);
-    }
-
-    buffer[n] = '\0';
-    write(STDERR_FILENO, buffer, (usize)n);
-    return;
-}
 
 static int
 record_callback(void *output_buffer, void *input_buffer,
