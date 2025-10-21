@@ -27,8 +27,8 @@ record_callback(void *output_buffer, void *input_buffer,
     static int16 dummy_buffer[FRAMES_PER_BUFFER] = {0};
     int *fifo = user_data;
     const int16 *in = input_buffer;
-    (void) output_buffer;
-    (void) stream_time;
+    (void)output_buffer;
+    (void)stream_time;
 
     if (status & RTAUDIO_STATUS_INPUT_OVERFLOW) {
         error("rtaudio: input overflow.\n");
@@ -39,17 +39,18 @@ record_callback(void *output_buffer, void *input_buffer,
         atomic_fetch_add(&had_overflow, 1);
     }
 
-    if (!in)
+    if (!in) {
         write(*fifo, &dummy_buffer, sizeof(dummy_buffer));
-    else
+    } else {
         write(*fifo, in, number_frames*sizeof(*in));
+    }
 
     return 0;
 }
 
 static void
 sigint_handler(int signum) {
-    (void) signum;
+    (void)signum;
     running = 0;
 }
 
@@ -85,10 +86,9 @@ main(void) {
 
     buffer_frames = FRAMES_PER_BUFFER;
     if (rtaudio_open_stream(rt_handle, NULL, &rt_stream_params,
-                            RTAUDIO_FORMAT_SINT16,
-                            SAMPLE_RATE, &buffer_frames,
-                            record_callback, &fifo,
-                            &rt_stream_options, NULL) != RTAUDIO_ERROR_NONE) {
+                            RTAUDIO_FORMAT_SINT16, SAMPLE_RATE, &buffer_frames,
+                            record_callback, &fifo, &rt_stream_options, NULL)
+        != RTAUDIO_ERROR_NONE) {
         error("Error opening RtAudio stream: %s\n", rtaudio_error(rt_handle));
         exit(EXIT_FAILURE);
     }
