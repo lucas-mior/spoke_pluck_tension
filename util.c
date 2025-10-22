@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined(UTIL_C)
+#ifndef UTIL_C
 #define UTIL_C
 
 #include <errno.h>
@@ -29,41 +29,37 @@
 #include <stdint.h>
 #include <time.h>
 
-#if defined(__WIN32__)
+#ifdef __WIN32__
 #include <windows.h>
 #else
 #include <sys/mman.h>
 #include <sys/wait.h>
 #endif
 
-#if !defined(SIZEKB)
 #define SIZEKB(X) ((size_t)(X)*1024ul)
 #define SIZEMB(X) ((size_t)(X)*1024ul*1024ul)
 #define SIZEGB(X) ((size_t)(X)*1024ul*1024ul*1024ul)
-#endif
 
-#if !defined(LENGTH)
+#ifndef LENGTH
 #define LENGTH(x) (isize)((sizeof(x) / sizeof(*x)))
 #endif
-#if !defined(SNPRINTF)
+#ifndef SNPRINTF
 #define SNPRINTF(BUFFER, FORMAT, ...)                                          \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
 #endif
-#if !defined(ARRAY_STRING)
+#ifndef ARRAY_STRING
 #define ARRAY_STRING(BUFFER, SEP, ARRAY, LENGTH)                               \
     array_string(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
 #endif
 
-#if !defined(DEBUGGING)
+#ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
 
-#if !defined(FLAGS_HUGE_PAGES)
 #if defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)
 #define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
 #else
 #define FLAGS_HUGE_PAGES 0
-#endif
 #endif
 
 #if !defined(MAP_POPULATE)
@@ -78,7 +74,7 @@
 #define ALIGN(x) UTIL_ALIGN(x, ALIGNMENT)
 #endif
 
-#if !defined(INTEGERS)
+#ifndef INTEGERS
 #define INTEGERS
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -123,7 +119,7 @@ static char *itoa2(long, char *);
 static long atoi2(char *);
 static size_t util_page_size = 0;
 
-#if defined(__WIN32__)
+#ifdef __WIN32__
 uint32
 util_nthreads(void) {
     SYSTEM_INFO sysinfo;
@@ -138,7 +134,7 @@ util_nthreads(void) {
 }
 #endif
 
-#if !defined(__WIN32__)
+#ifndef __WIN32__
 void *
 xmmap_commit(size_t *size) {
     void *p;
@@ -279,7 +275,7 @@ snprintf2(char *buffer, size_t size, char *format, ...) {
     return n;
 }
 
-#if defined(__WIN32__)
+#ifdef __WIN32__
 int
 util_command(const int argc, char **argv) {
     char *cmdline;
@@ -424,7 +420,7 @@ error(char *format, ...) {
 
     buffer[n] = '\0';
     write(STDERR_FILENO, buffer, (size_t)n);
-#if !defined(__WIN32__)
+#ifndef __WIN32__
     fsync(STDERR_FILENO);
     fsync(STDOUT_FILENO);
 #endif
@@ -433,7 +429,7 @@ error(char *format, ...) {
 
 void
 fatal(int status) {
-#if defined(DEBUGGING)
+#ifdef DEBUGGING
     (void)status;
     abort();
 #else
@@ -558,7 +554,7 @@ util_copy_file(const char *destination, const char *source) {
     return 0;
 }
 
-#if defined(__linux__)
+#ifdef __linux__
 #include <dirent.h>
 void
 send_signal(const char *executable, const int32 signal_number) {
@@ -634,7 +630,7 @@ send_signal(const char *executable, const int32 signal_number) {
     return;
 }
 #else
-#if !defined(__WIN32__)
+#ifndef __WIN32__
 void
 send_signal(const char *executable, const int32 signal_number) {
     char signal_string[14];
@@ -699,7 +695,7 @@ atoi2(char *str) {
     return atoi(str);
 }
 
-#if __INCLUDE_LEVEL__ == 0
+#ifdef TESTING_util
 #include <assert.h>
 
 int
