@@ -8,8 +8,10 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <time.h>
+#include <libgen.h>
 #include <rtaudio/rtaudio_c.h>
 
+static char *program;
 #include "util.c"
 
 #define SAMPLE_RATE 44100
@@ -55,7 +57,7 @@ sigint_handler(int signum) {
 }
 
 int
-main(void) {
+main(int argc, char **argv) {
     int fifo;
     int total = 0;
     uint32 buffer_frames;
@@ -65,6 +67,8 @@ main(void) {
     rtaudio_t rt_handle = NULL;
 
     signal(SIGINT, sigint_handler);
+    (void)argc;
+    program = basename(argv[0]);
 
     if ((fifo = open(FIFO_PATH, O_WRONLY)) < 0) {
         error("Error opening %s: %s.\n", FIFO_PATH, strerror(errno));

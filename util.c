@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTIL_C
+#if !defined(UTIL_C)
 #define UTIL_C
 
 #include <errno.h>
@@ -29,37 +29,48 @@
 #include <stdint.h>
 #include <time.h>
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 #include <windows.h>
 #else
 #include <sys/mman.h>
 #include <sys/wait.h>
 #endif
 
+#if defined(__INCLUDE_LEVEL__) && __INCLUDE_LEVEL__ == 0
+#define TESTING_util 1
+char *program = __FILE__;
+#elif !defined(TESTING_util)
+#define TESTING_util 0
+#endif
+
+#if !defined(SIZEKB)
 #define SIZEKB(X) ((size_t)(X)*1024ul)
 #define SIZEMB(X) ((size_t)(X)*1024ul*1024ul)
 #define SIZEGB(X) ((size_t)(X)*1024ul*1024ul*1024ul)
+#endif
 
-#ifndef LENGTH
+#if !defined(LENGTH)
 #define LENGTH(x) (isize)((sizeof(x) / sizeof(*x)))
 #endif
-#ifndef SNPRINTF
+#if !defined(SNPRINTF)
 #define SNPRINTF(BUFFER, FORMAT, ...)                                          \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
 #endif
-#ifndef ARRAY_STRING
-#define ARRAY_STRING(BUFFER, SEP, ARRAY, LENGTH)                               \
-    array_string(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
+#if !defined(STRING_FROM_STRINGS)
+#define STRING_FROM_STRINGS(BUFFER, SEP, ARRAY, LENGTH)                        \
+    string_from_strings(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
 #endif
 
-#ifndef DEBUGGING
+#if !defined(DEBUGGING)
 #define DEBUGGING 0
 #endif
 
+#if !defined(FLAGS_HUGE_PAGES)
 #if defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)
 #define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
 #else
 #define FLAGS_HUGE_PAGES 0
+#endif
 #endif
 
 #if !defined(MAP_POPULATE)
@@ -74,7 +85,7 @@
 #define ALIGN(x) UTIL_ALIGN(x, ALIGNMENT)
 #endif
 
-#ifndef INTEGERS
+#if !defined(INTEGERS)
 #define INTEGERS
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -107,19 +118,20 @@ static char *xstrdup(char *);
 static int32 snprintf2(char *, size_t, char *, ...);
 static void error(char *, ...);
 static void fatal(int) __attribute__((noreturn));
-static void array_string(char *, int32, char *, char **, int32);
+static void string_from_strings(char *, int32, char *, char **, int32);
 static int32 util_copy_file(const char *, const char *);
 static int32 util_string_int32(int32 *, const char *);
 static int util_command(const int, char **);
 static uint32 util_nthreads(void);
-static void util_die_notify(const char *, ...) __attribute__((noreturn));
+static void util_die_notify(char *, const char *, ...)
+    __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
 static void send_signal(const char *, const int);
 static char *itoa2(long, char *);
 static long atoi2(char *);
 static size_t util_page_size = 0;
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 uint32
 util_nthreads(void) {
     SYSTEM_INFO sysinfo;
@@ -134,7 +146,7 @@ util_nthreads(void) {
 }
 #endif
 
-#ifndef __WIN32__
+#if !defined(__WIN32__)
 void *
 xmmap_commit(size_t *size) {
     void *p;
@@ -275,7 +287,7 @@ snprintf2(char *buffer, size_t size, char *format, ...) {
     return n;
 }
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 int
 util_command(const int argc, char **argv) {
     char *cmdline;
@@ -370,8 +382,8 @@ util_command(const int argc, char **argv) {
 #endif
 
 void
-array_string(char *buffer, int32 size, char *sep, char **array,
-             int32 array_length) {
+string_from_strings(char *buffer, int32 size, char *sep, char **array,
+                    int32 array_length) {
     int32 n = 0;
 
     for (int32 i = 0; i < (array_length - 1); i += 1) {
@@ -420,7 +432,7 @@ error(char *format, ...) {
 
     buffer[n] = '\0';
     write(STDERR_FILENO, buffer, (size_t)n);
-#ifndef __WIN32__
+#if !defined(__WIN32__)
     fsync(STDERR_FILENO);
     fsync(STDOUT_FILENO);
 #endif
@@ -429,12 +441,12 @@ error(char *format, ...) {
 
 void
 fatal(int status) {
-#ifdef DEBUGGING
-    (void)status;
-    abort();
-#else
-    exit(status);
-#endif
+    if (DEBUGGING) {
+        (void)status;
+        abort();
+    } else {
+        exit(status);
+    }
 }
 
 void
@@ -444,7 +456,7 @@ util_segv_handler(int32 unused) {
 
     (void)write(STDERR_FILENO, message, strlen(message));
     for (uint i = 0; i < LENGTH(notifiers); i += 1) {
-        execlp(notifiers[i], notifiers[i], "-u", "critical", "clipsim", message,
+        execlp(notifiers[i], notifiers[i], "-u", "critical", program, message,
                NULL);
     }
     _exit(EXIT_FAILURE);
@@ -467,7 +479,7 @@ util_string_int32(int32 *number, const char *string) {
 }
 
 void
-util_die_notify(const char *format, ...) {
+util_die_notify(char *program_name, const char *format, ...) {
     int32 n;
     va_list args;
     char buffer[BUFSIZ];
@@ -487,8 +499,8 @@ util_die_notify(const char *format, ...) {
     buffer[n] = '\0';
     (void)write(STDERR_FILENO, buffer, (usize)n + 1);
     for (uint i = 0; i < LENGTH(notifiers); i += 1) {
-        execlp(notifiers[i], notifiers[i], "-u", "critical", "clipsim", buffer,
-               NULL);
+        execlp(notifiers[i], notifiers[i], "-u", "critical", program_name,
+               buffer, NULL);
     }
     fatal(EXIT_FAILURE);
 }
@@ -554,7 +566,7 @@ util_copy_file(const char *destination, const char *source) {
     return 0;
 }
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <dirent.h>
 void
 send_signal(const char *executable, const int32 signal_number) {
@@ -565,8 +577,6 @@ send_signal(const char *executable, const int32 signal_number) {
         error("Error opening /proc: %s\n", strerror(errno));
         return;
     }
-
-    error("looking for %s -> %d\n", executable, signal_number);
 
     while ((process = readdir(processes))) {
         char buffer[256];
@@ -593,6 +603,7 @@ send_signal(const char *executable, const int32 signal_number) {
         if ((cmdline = open(buffer, O_RDONLY)) < 0) {
             if (errno != ENOENT || DEBUGGING) {
                 error("Error opening %s: %s.\n", buffer, strerror(errno));
+                continue;
             }
             if (errno != ENOENT) {
                 fatal(EXIT_FAILURE);
@@ -602,12 +613,13 @@ send_signal(const char *executable, const int32 signal_number) {
         errno = 0;
         if ((r = read(cmdline, command, sizeof(command))) <= 0) {
             if (DEBUGGING) {
-                error("Error reading from %s");
+                error("Error reading from %s", buffer);
                 if (r < 0) {
-                    error(": %s", buffer, strerror(errno));
+                    error(": %s", strerror(errno));
                 }
                 error(".\n");
             }
+            (void)r;
             close(cmdline);
             continue;
         }
@@ -630,7 +642,7 @@ send_signal(const char *executable, const int32 signal_number) {
     return;
 }
 #else
-#ifndef __WIN32__
+#if !defined(__WIN32__)
 void
 send_signal(const char *executable, const int32 signal_number) {
     char signal_string[14];
@@ -695,7 +707,7 @@ atoi2(char *str) {
     return atoi(str);
 }
 
-#ifdef TESTING_util
+#if TESTING_util
 #include <assert.h>
 
 int
