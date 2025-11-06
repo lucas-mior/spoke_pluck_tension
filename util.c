@@ -28,29 +28,75 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <time.h>
+#include <libgen.h>
+#include <pthread.h>
+#include <limits.h>
+#include <sys/stat.h>
 
-#if defined(__WIN32__)
-#include <windows.h>
+#if defined(__linux__)
+#define OS_LINUX 1
+#define OS_MAC 0
+#define OS_BSD 0
+#define OS_WINDOWS 0
+#elif defined(__APPLE__) && defined(__MACH__)
+#define OS_LINUX 0
+#define OS_MAC 1
+#define OS_BSD 0
+#define OS_WINDOWS 0
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define OS_LINUX 0
+#define OS_MAC 0
+#define OS_BSD 1
+#define OS_WINDOWS 0
+#elif defined(_WIN32) || defined(_WIN64)
+#define OS_LINUX 0
+#define OS_MAC 0
+#define OS_BSD 0
+#define OS_WINDOWS 1
 #else
+#error "Unsupported OS.\n"
+#endif
+
+#define OS_UNIX (OS_LINUX || OS_MAC || OS_BSD)
+
+#if OS_WINDOWS
+#include <windows.h>
+#endif
+
+#if OS_UNIX
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pthread.h>
+#endif
+
+#ifndef DEBUGGING
+#define DEBUGGING 0
 #endif
 
 #if defined(__INCLUDE_LEVEL__) && __INCLUDE_LEVEL__ == 0
 #define TESTING_util 1
-static char *program = __FILE__;
 #elif !defined(TESTING_util)
 #define TESTING_util 0
 #endif
 
+#if TESTING_util
+static char *program = __FILE__;
+#else
+static char *program;
+#endif
+
+#define SIZEOF(X) (int64)sizeof(X)
+
 #if !defined(SIZEKB)
-#define SIZEKB(X) ((size_t)(X)*1024ul)
-#define SIZEMB(X) ((size_t)(X)*1024ul*1024ul)
-#define SIZEGB(X) ((size_t)(X)*1024ul*1024ul*1024ul)
+#define SIZEKB(X) ((int64)(X)*1024l)
+#define SIZEMB(X) ((int64)(X)*1024l*1024l)
+#define SIZEGB(X) ((int64)(X)*1024l*1024l*1024l)
 #endif
 
 #if !defined(LENGTH)
-#define LENGTH(x) (isize)((sizeof(x) / sizeof(*x)))
+#define LENGTH(x) (int64)((sizeof(x) / sizeof(*x)))
 #endif
 #if !defined(SNPRINTF)
 #define SNPRINTF(BUFFER, FORMAT, ...)                                          \
@@ -59,6 +105,37 @@ static char *program = __FILE__;
 #if !defined(STRING_FROM_STRINGS)
 #define STRING_FROM_STRINGS(BUFFER, SEP, ARRAY, LENGTH)                        \
     string_from_strings(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
+#endif
+
+#if DEBUGGING || TESTING_util
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wc11-extensions"
+#pragma clang diagnostic ignored "-Wformat"
+#pragma clang diagnostic ignored "-Wdouble-promotion"
+#endif
+
+#define PRINT_VAR_EVAL(FORMAT, variable)                                       \
+    printf("%s = " FORMAT "\n", #variable, variable)
+
+#define PRINT_VAR(variable)                                                    \
+    _Generic((variable),                                                       \
+        bool: PRINT_VAR_EVAL("%b", variable),                                  \
+        char: PRINT_VAR_EVAL("%c", variable),                                  \
+        char *: PRINT_VAR_EVAL("%s", variable),                                \
+        float: PRINT_VAR_EVAL("%f", variable),                                 \
+        double: PRINT_VAR_EVAL("%f", variable),                                \
+        long double: PRINT_VAR_EVAL("%Lf", variable),                          \
+        int8: PRINT_VAR_EVAL("%d", variable),                                  \
+        int16: PRINT_VAR_EVAL("%d", variable),                                 \
+        int32: PRINT_VAR_EVAL("%d", variable),                                 \
+        int64: PRINT_VAR_EVAL("%lld", (long long)variable),                                \
+        uint8: PRINT_VAR_EVAL("%u", variable),                                 \
+        uint16: PRINT_VAR_EVAL("%u", variable),                                \
+        uint32: PRINT_VAR_EVAL("%u", variable),                                \
+        uint64: PRINT_VAR_EVAL("%lu", variable),                               \
+        void *: PRINT_VAR_EVAL("%p", variable),                                \
+        default: printf("%s = ?\n", #variable))
+
 #endif
 
 #if !defined(DEBUGGING)
@@ -78,6 +155,7 @@ static char *program = __FILE__;
 #endif
 
 #define UTIL_ALIGN(S, A) (((S) + ((A) - 1)) & ~((A) - 1))
+
 #if !defined(ALIGNMENT)
 #define ALIGNMENT 16ul
 #endif
@@ -108,18 +186,11 @@ typedef ssize_t isize;
 
 static char *notifiers[2] = {"dunstify", "notify-send"};
 
-static void *xmmap_commit(size_t *);
-static void xmunmap(void *, size_t);
-static void *xcalloc(const size_t, const size_t);
-static void *xmalloc(const size_t);
-static void *xrealloc(void *, const size_t);
 static void *util_memdup(const void *, const usize);
 static char *xstrdup(char *);
 static int32 snprintf2(char *, size_t, char *, ...);
 static void error(char *, ...);
 static void fatal(int) __attribute__((noreturn));
-static void string_from_strings(char *, int32, char *, char **, int32);
-static int32 util_copy_file(const char *, const char *);
 static int32 util_string_int32(int32 *, const char *);
 static int util_command(const int, char **);
 static uint32 util_nthreads(void);
@@ -131,7 +202,42 @@ static char *itoa2(long, char *);
 static long atoi2(char *);
 static size_t util_page_size = 0;
 
-#if defined(__WIN32__)
+#if OS_WINDOWS
+static void *
+memmem(void *haystack, size_t hay_len, void *needle, size_t needle_len) {
+    uchar *h = haystack;
+    uchar *n = needle;
+    uchar *end = h + hay_len;
+    uchar *limit = end - needle_len + 1;
+
+    if (needle_len == 0) {
+        return haystack;
+    }
+    if ((haystack == NULL) || (needle == NULL)) {
+        return NULL;
+    }
+    if (hay_len < needle_len) {
+        return NULL;
+    }
+
+    while (h < limit) {
+        uchar *p;
+
+        if ((p = memchr(h, n[0], (size_t)(limit - h))) == NULL) {
+            return NULL;
+        }
+
+        if (memcmp(p, n, needle_len) == 0) {
+            return (void *)p;
+        }
+        h = p + 1;
+    }
+
+    return NULL;
+}
+#endif
+
+#if OS_WINDOWS
 uint32
 util_nthreads(void) {
     SYSTEM_INFO sysinfo;
@@ -146,9 +252,44 @@ util_nthreads(void) {
 }
 #endif
 
-#if !defined(__WIN32__)
-void *
-xmmap_commit(size_t *size) {
+#if OS_WINDOWS || OS_MAC
+#define basename basename2
+#endif
+
+static char *
+basename2(char *path) {
+    int64 left = (int64)strlen(path);
+    char *fslash = NULL;
+    char *bslash = NULL;
+    char *p = path;
+
+    while (left > 0) {
+        int64 length;
+
+        fslash = memchr(p, '/', (usize)left);
+        if (OS_WINDOWS) {
+            bslash = memchr(p, '\\', (usize)left);
+        }
+
+        if ((fslash == NULL) && (bslash == NULL)) {
+            return p;
+        }
+        if (fslash > bslash) {
+            length = fslash - p + 1;
+            p = fslash + 1;
+        } else {
+            length = bslash - p + 1;
+            p = bslash + 1;
+        }
+
+        left -= length;
+    }
+    return path;
+}
+
+#if OS_UNIX
+static void *
+xmmap_commit(int64 *size) {
     void *p;
 
     if (util_page_size == 0) {
@@ -162,18 +303,18 @@ xmmap_commit(size_t *size) {
 
     do {
         if ((*size >= SIZEMB(2)) && FLAGS_HUGE_PAGES) {
-            p = mmap(NULL, *size, PROT_READ | PROT_WRITE,
+            p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
                      MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE
                          | FLAGS_HUGE_PAGES,
                      -1, 0);
             if (p != MAP_FAILED) {
-                *size = UTIL_ALIGN(*size, SIZEMB(2));
+                *size = (int64)UTIL_ALIGN((size_t)size, (size_t)SIZEMB(2));
                 break;
             }
         }
-        p = mmap(NULL, *size, PROT_READ | PROT_WRITE,
+        p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
-        *size = UTIL_ALIGN(*size, util_page_size);
+        *size = (int64)UTIL_ALIGN((size_t)*size, util_page_size);
     } while (0);
     if (p == MAP_FAILED) {
         error("Error in mmap(%zu): %s.\n", *size, strerror(errno));
@@ -181,16 +322,16 @@ xmmap_commit(size_t *size) {
     }
     return p;
 }
-void
-xmunmap(void *p, size_t size) {
-    if (munmap(p, size) < 0) {
-        error("Error in munmap(%p, %zu): %s.\n", p, size, strerror(errno));
+static void
+xmunmap(void *p, int64 size) {
+    if (munmap(p, (size_t)size) < 0) {
+        error("Error in munmap(%p, %lld): %s.\n", p, size, strerror(errno));
     }
     return;
 }
 #else
-void *
-xmmap_commit(size_t *size) {
+static void *
+xmmap_commit(int64 *size) {
     void *p;
 
     if (util_page_size == 0) {
@@ -203,15 +344,16 @@ xmmap_commit(size_t *size) {
         }
     }
 
-    p = VirtualAlloc(NULL, *size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    p = VirtualAlloc(NULL, (size_t)*size, MEM_COMMIT | MEM_RESERVE,
+                     PAGE_READWRITE);
     if (p == NULL) {
-        fprintf(stderr, "Error in VirtualAlloc(%zu): %lu.\n", *size,
+        fprintf(stderr, "Error in VirtualAlloc(%lld): %lu.\n", (long long)*size,
                 GetLastError());
         fatal(EXIT_FAILURE);
     }
     return p;
 }
-void
+static void
 xmunmap(void *p, size_t size) {
     (void)size;
     if (!VirtualFree(p, 0, MEM_RELEASE)) {
@@ -221,27 +363,36 @@ xmunmap(void *p, size_t size) {
 }
 #endif
 
-void *
-xmalloc(const size_t size) {
+static void *
+xmalloc(int64 size) {
     void *p;
-    if ((p = malloc(size)) == NULL) {
-        error("Failed to allocate %zu bytes.\n", size);
+    if (size <= 0) {
+        error("Error in xmalloc: invalid size = %ld.\n", size);
+        fatal(EXIT_FAILURE);
+    }
+    if ((p = malloc((size_t)size)) == NULL) {
+        error("Failed to allocate %lld bytes.\n", (long long)size);
         fatal(EXIT_FAILURE);
     }
     return p;
 }
 
-void *
-xrealloc(void *old, const size_t size) {
+static void *
+xrealloc(void *old, const int64 size) {
     void *p;
-    if ((p = realloc(old, size)) == NULL) {
-        error("Failed to reallocate %zu bytes from %p.\n", size, old);
+    uint64 old_save = (uint64)old;
+    if (size <= 0) {
+        error("Error in xmalloc: invalid size = %lld.\n", (long long)size);
+        fatal(EXIT_FAILURE);
+    }
+    if ((p = realloc(old, (usize)size)) == NULL) {
+        error("Failed to reallocate %zu bytes from %x.\n", size, old_save);
         fatal(EXIT_FAILURE);
     }
     return p;
 }
 
-void *
+static void *
 xcalloc(const size_t nmemb, const size_t size) {
     void *p;
     if ((p = calloc(nmemb, size)) == NULL) {
@@ -267,6 +418,46 @@ xstrdup(char *string) {
     return p;
 }
 
+static void
+xpthread_mutex_lock(pthread_mutex_t *mutex) {
+    int err;
+    if ((err = pthread_mutex_lock(mutex))) {
+        error("Error locking mutex %p: %s.\n", mutex, strerror(err));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
+
+static void
+xpthread_mutex_unlock(pthread_mutex_t *mutex) {
+    int err;
+    if ((err = pthread_mutex_unlock(mutex))) {
+        error("Error unlocking mutex %p: %s.\n", mutex, strerror(err));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
+
+static void
+xpthread_cond_destroy(pthread_cond_t *cond) {
+    int err;
+    if ((err = pthread_cond_destroy(cond))) {
+        error("Error destroying cond %p: %s.\n", cond, strerror(err));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
+
+static void
+xpthread_mutex_destroy(pthread_mutex_t *mutex) {
+    int err;
+    if ((err = pthread_mutex_destroy(mutex))) {
+        error("Error destroying mutex %p: %s.\n", mutex, strerror(err));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
+
 int32
 snprintf2(char *buffer, size_t size, char *format, ...) {
     int n;
@@ -287,64 +478,89 @@ snprintf2(char *buffer, size_t size, char *format, ...) {
     return n;
 }
 
-#if defined(__WIN32__)
+#if OS_WINDOWS
 int
 util_command(const int argc, char **argv) {
-    char *cmdline;
-    uint32 len = 1;
+    char cmdline[1024] = {0};
+    int64 j = 0;
+    FILE *tty;
+    PROCESS_INFORMATION proc_info = {0};
+    DWORD exit_code = 0;
+    int64 len = (int64)strlen(argv[0]);
+    char *argv0_windows;
+    char *exe = ".exe";
+    int64 exe_len = (int64)(strlen(exe));
 
     if (argc == 0 || argv == NULL) {
         error("Invalid arguments.\n");
         fatal(EXIT_FAILURE);
     }
 
+    if (memmem(argv[0], (size_t)len + 1, exe, (size_t)exe_len + 1) == NULL) {
+        argv0_windows = xmalloc(len + exe_len + 1);
+        memcpy(argv0_windows, argv[0], (size_t)len);
+        memcpy(argv0_windows + len, exe, (size_t)exe_len + 1);
+        argv[0] = argv0_windows;
+    }
+
     for (int i = 0; i < argc - 1; i += 1) {
-        len += strlen(argv[i]) + 3;
-    }
-    cmdline = xmalloc(len);
-
-    cmdline[0] = '\0';
-    for (int i = 0; i < (argc - 1); i += 1) {
-        strcat(cmdline, "\"");
-        strcat(cmdline, argv[i]);
-        strcat(cmdline, "\"");
-        strcat(cmdline, " ");
-    }
-
-    FILE *tty = freopen("CONIN$", "r", stdin);
-    if (!tty) {
-        error("Error reopening stdin: %s.\n", strerror(errno));
-        free(cmdline);
-        fatal(EXIT_FAILURE);
-    }
-
-    STARTUPINFO si;
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-    PROCESS_INFORMATION pi = {0};
-
-    BOOL success = CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, 0, NULL,
-                                  NULL, &si, &pi);
-
-    if (!success) {
-        error("Error running '%s", argv[0]);
-        for (int i = 1; i < (argc - 1); i += 1) {
-            error(" %s", argv[i]);
+        int64 len2 = (int64)strlen(argv[i]);
+        if ((j + len2) >= (int64)sizeof(cmdline)) {
+            error("Command line is too long.\n");
+            fatal(EXIT_FAILURE);
         }
-        error("': %lu.\n", GetLastError());
-        free(cmdline);
+
+        cmdline[j] = '"';
+        memcpy(&cmdline[j + 1], argv[i], (size_t)len2);
+        cmdline[j + len2 + 1] = '"';
+        cmdline[j + len2 + 2] = ' ';
+        j += len2 + 3;
+    }
+    cmdline[j - 1] = '\0';
+
+    if ((tty = freopen("CONIN$", "r", stdin)) == NULL) {
+        error("Error reopening stdin: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
 
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    {
+        BOOL success;
+        STARTUPINFO startup_info = {0};
+        startup_info.cb = sizeof(startup_info);
+        success = CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
+                                 &startup_info, &proc_info);
+        if (!success) {
+            DWORD err = GetLastError();
+            error("Error running '%s': %d.\n", cmdline, err);
+            if (err == ERROR_PATH_NOT_FOUND) {
+                error("Path not found.\n");
+            }
+            return -1;
+        }
+    }
 
-    DWORD exit_code = 0;
-    GetExitCodeProcess(pi.hProcess, &exit_code);
+    if (WaitForSingleObject(proc_info.hProcess, INFINITE) != WAIT_OBJECT_0) {
+        CloseHandle(proc_info.hThread);
+        CloseHandle(proc_info.hProcess);
+        return -1;
+    }
 
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-    free(cmdline);
-    return 0;
+    if (!GetExitCodeProcess(proc_info.hProcess, &exit_code)) {
+        CloseHandle(proc_info.hThread);
+        CloseHandle(proc_info.hProcess);
+        return -1;
+    }
+
+    if (!CloseHandle(proc_info.hThread)) {
+        CloseHandle(proc_info.hProcess);
+        return -1;
+    }
+
+    if (!CloseHandle(proc_info.hProcess)) {
+        return -1;
+    }
+
+    return (int)exit_code;
 }
 #else
 int
@@ -374,14 +590,14 @@ util_command(const int argc, char **argv) {
         }
         if (!WIFEXITED(status)) {
             error("Command exited abnormally.\n");
-            fatal(EXIT_FAILURE);
+            return -1;
         }
         return WEXITSTATUS(status);
     }
 }
 #endif
 
-void
+static void
 string_from_strings(char *buffer, int32 size, char *sep, char **array,
                     int32 array_length) {
     int32 n = 0;
@@ -419,7 +635,7 @@ void
 error(char *format, ...) {
     char buffer[BUFSIZ];
     va_list args;
-    int32 n;
+    int64 n;
 
     va_start(args, format);
     n = vsnprintf(buffer, sizeof(buffer), format, args);
@@ -431,8 +647,8 @@ error(char *format, ...) {
     }
 
     buffer[n] = '\0';
-    write(STDERR_FILENO, buffer, (size_t)n);
-#if !defined(__WIN32__)
+    write(STDERR_FILENO, buffer, (uint32)n);
+#if OS_UNIX
     fsync(STDERR_FILENO);
     fsync(STDOUT_FILENO);
 #endif
@@ -454,8 +670,8 @@ util_segv_handler(int32 unused) {
     char *message = "Memory error. Please send a bug report.\n";
     (void)unused;
 
-    (void)write(STDERR_FILENO, message, strlen(message));
-    for (uint i = 0; i < LENGTH(notifiers); i += 1) {
+    write(STDERR_FILENO, message, (uint32)strlen(message));
+    for (uint32 i = 0; i < LENGTH(notifiers); i += 1) {
         execlp(notifiers[i], notifiers[i], "-u", "critical", program, message,
                NULL);
     }
@@ -492,13 +708,13 @@ util_die_notify(char *program_name, const char *format, ...) {
         fatal(EXIT_FAILURE);
     }
 
-    if (n >= (int32)sizeof(buffer)) {
+    if (n >= SIZEOF(buffer)) {
         fatal(EXIT_FAILURE);
     }
 
     buffer[n] = '\0';
-    (void)write(STDERR_FILENO, buffer, (usize)n + 1);
-    for (uint i = 0; i < LENGTH(notifiers); i += 1) {
+    write(STDERR_FILENO, buffer, (uint32)n + 1);
+    for (uint32 i = 0; i < LENGTH(notifiers); i += 1) {
         execlp(notifiers[i], notifiers[i], "-u", "critical", program_name,
                buffer, NULL);
     }
@@ -516,8 +732,9 @@ util_memdup(const void *source, const usize size) {
     return p;
 }
 
-int32
-util_copy_file(const char *destination, const char *source) {
+#if OS_UNIX
+static int32
+util_copy_file_sync(const char *destination, const char *source) {
     int32 source_fd;
     int32 destination_fd;
     char buffer[BUFSIZ];
@@ -566,12 +783,36 @@ util_copy_file(const char *destination, const char *source) {
     return 0;
 }
 
-#if defined(__linux__)
+static int32
+util_copy_file_async(const char *destination, const char *source,
+                     int *dest_fd) {
+    int32 source_fd;
+
+    if ((source_fd = open(source, O_RDONLY)) < 0) {
+        error("Error opening %s for reading: %s.\n", source, strerror(errno));
+        return -1;
+    }
+
+    if ((*dest_fd
+         = open(destination, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR))
+        < 0) {
+        error("Error opening %s for writing: %s.\n", destination,
+              strerror(errno));
+        close(source_fd);
+        return -1;
+    }
+
+    return source_fd;
+}
+#endif
+
+#if OS_LINUX
 #include <dirent.h>
 void
 send_signal(const char *executable, const int32 signal_number) {
     DIR *processes;
     struct dirent *process;
+    int64 len = (int64)strlen(executable);
 
     if ((processes = opendir("/proc")) == NULL) {
         error("Error opening /proc: %s\n", strerror(errno));
@@ -586,50 +827,31 @@ send_signal(const char *executable, const int32 signal_number) {
         ssize_t r;
 
         if (process->d_type != DT_DIR) {
-            if (DEBUGGING) {
-                error("Error: %s is not directory.\n", process->d_name);
-            }
             continue;
         }
         if ((pid = atoi(process->d_name)) <= 0) {
-            if (DEBUGGING) {
-                error("Error: atoi(%s) <= 0.\n", process->d_name);
-            }
             continue;
         }
 
         SNPRINTF(buffer, "/proc/%s/cmdline", process->d_name);
 
         if ((cmdline = open(buffer, O_RDONLY)) < 0) {
-            if (errno != ENOENT || DEBUGGING) {
-                error("Error opening %s: %s.\n", buffer, strerror(errno));
-                continue;
-            }
-            if (errno != ENOENT) {
-                fatal(EXIT_FAILURE);
-            }
+            continue;
         }
 
         errno = 0;
         if ((r = read(cmdline, command, sizeof(command))) <= 0) {
-            if (DEBUGGING) {
-                error("Error reading from %s", buffer);
-                if (r < 0) {
-                    error(": %s", strerror(errno));
-                }
-                error(".\n");
-            }
             (void)r;
             close(cmdline);
             continue;
         }
-        if (!strcmp(command, executable)) {
+        if (memmem(command, (size_t)r, executable, (size_t)len)) {
             if (kill(pid, signal_number) < 0) {
                 error("Error sending signal %d to program %s (pid %d): %s.\n",
                       signal_number, executable, pid, strerror(errno));
             } else {
                 if (DEBUGGING) {
-                    error("Sended signal %d to program %s (pid %d): %s.\n",
+                    error("Sended signal %d to program %s (pid %d).\n",
                           signal_number, executable, pid);
                 }
             }
@@ -641,8 +863,7 @@ send_signal(const char *executable, const int32 signal_number) {
     closedir(processes);
     return;
 }
-#else
-#if !defined(__WIN32__)
+#elif OS_UNIX
 void
 send_signal(const char *executable, const int32 signal_number) {
     char signal_string[14];
@@ -668,7 +889,6 @@ send_signal(const char *executable, const int32 signal_number) {
     (void)signal_number;
     return;
 }
-#endif
 #endif
 
 char *
@@ -718,17 +938,69 @@ main(void) {
     char *p3;
     char *string = __FILE__;
 
+    bool var_bool = true;
+    char var_char = 'c';
+    char *var_string = "a nice string";
+    void *var_voidptr = NULL;
+    float var_float = 0.5f;
+    double var_double = 0.5;
+    long double var_longdouble = 0.5L;
+    int8 var_int8 = INT8_MAX;
+    int16 var_int16 = INT16_MAX;
+    int32 var_int32 = INT32_MAX;
+    int64 var_int64 = INT64_MAX;
+    uint8 var_uint8 = UINT8_MAX;
+    uint16 var_uint16 = UINT16_MAX;
+    uint32 var_uint32 = UINT32_MAX;
+    uint64 var_uint64 = UINT64_MAX;
+
+    char *paths[] = {
+        "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
+        "a/b/cccc",        "a/bb/cccc", "aaaa/cccc",
+    };
+    char *bases[] = {
+        "cccc", "cc", "c", "c", "cccc", "cccc", "cccc",
+    };
+
+#if defined(__clang__)
+    PRINT_VAR(var_bool);
+    PRINT_VAR(var_char);
+    PRINT_VAR(var_string);
+    PRINT_VAR(var_voidptr);
+    PRINT_VAR(var_float);
+    PRINT_VAR(var_double);
+    PRINT_VAR(var_longdouble);
+    PRINT_VAR(var_int8);
+    PRINT_VAR(var_int16);
+    PRINT_VAR(var_int32);
+    PRINT_VAR(var_int64);
+    PRINT_VAR(var_uint8);
+    PRINT_VAR(var_uint16);
+    PRINT_VAR(var_uint32);
+    PRINT_VAR(var_uint64);
+#endif
+
     memset(p1, 0, SIZEMB(1));
     memcpy(p1, string, strlen(string));
     memset(p2, 0, SIZEMB(1));
     p3 = xstrdup(p1);
 
-    error("%s == %s is working? %b\n", string, p3, !strcmp(string, p3));
+    assert(!strcmp(string, p3));
 
     srand((uint)time(NULL));
     for (int i = 0; i < 10; i += 1) {
         int n = rand() - RAND_MAX / 2;
         assert(atoi2(itoa2(n, buffer)) == n);
+    }
+
+    for (int64 i = 0; i < LENGTH(paths); i += 1) {
+        char *path = paths[i];
+        assert(!strcmp(basename2(path), bases[i]));
+    }
+
+    if (OS_WINDOWS) {
+        char *path2 = "aa\\cc";
+        assert(!strcmp(basename2(path2), "cc"));
     }
 
     free(p1);
