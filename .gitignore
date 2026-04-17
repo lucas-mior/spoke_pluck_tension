@@ -9,3 +9,4 @@ notedetection
 tuner
 *.ods#
 temp_delete_me
+compile_commands.json
