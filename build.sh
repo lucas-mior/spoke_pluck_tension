@@ -6,7 +6,10 @@ set -e
 
 CC="${CC:-cc}"
 
-CFLAGS="-g -O3 -march=native -fPIC -flto -D_DEFAULT_SOURCE -I cbase"
+CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
+CPPFLAGS="$CPPFLAGS -Icbase"
+
+CFLAGS="-g -O3 -march=native -fPIC -flto"
 CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-unused-macros"
@@ -30,7 +33,7 @@ build() {
     ctags --kinds-C=+l ./**/*.h ./**/*.c || true
     vtags.sed tags > .tags.vim || true
     
-    $CC $CFLAGS -o audio_to_fifo audio_to_fifo.c $LDFLAGS
+    $CC $CPPFLAGS $CFLAGS -o audio_to_fifo audio_to_fifo.c $LDFLAGS
 }
 
 if [ "$1" = "clean" ]; then
