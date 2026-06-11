@@ -17,7 +17,8 @@ CFLAGS="$CFLAGS -Wno-unused-function"
 CFLAGS="$CFLAGS -Wno-discarded-qualifiers"
 
 if [ "$CC" = "clang" ]; then
-    CFLAGS="$CFLAGS -Weverything -Wno-format-nonliteral"
+    CFLAGS="$CFLAGS -Weverything"
+    CFLAGS="$CFLAGS -Wno-format-nonliteral"
     CFLAGS="$CFLAGS -Wno-constant-logical-operand"
     CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
     CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
