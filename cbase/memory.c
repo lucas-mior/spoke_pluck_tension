@@ -1026,7 +1026,7 @@ int main(void) {
         int64 len = strlen32(original) + 1;
 
         ASSERT(dup != original);
-        ASSERT(strcmp(dup, original) == 0);
+        ASSERT(strequal(dup, original));
         printf("xstrdup successful.\n");
 
         mem_dup = xmemdup(dup, len);

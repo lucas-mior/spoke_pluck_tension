@@ -396,7 +396,7 @@ fifo_path = "/tmp/audio_fifo"
 if not os.path.exists(fifo_path):
     os.mkfifo(fifo_path)
 
-make_result = subprocess.run(["make"])
+make_result = subprocess.run(["./build.sh"])
 if make_result.returncode != 0:
     print("Build failed. Exiting.")
     exit(1)
