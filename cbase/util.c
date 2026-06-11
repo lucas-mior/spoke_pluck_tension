@@ -1614,12 +1614,15 @@ basename2(char *path, int32 *full_length, int32 *base_len) {
 static char *
 path_basename(char *path, int32 path_len) {
     int32 slash = -1;
+    int32 start;
+
     for (int32 i = 0; i < path_len; i += 1) {
         if (path[i] == '/') {
             slash = i;
         }
     }
-    int32 start = slash + 1;
+
+    start = slash + 1;
     return xstrndup(path + start, path_len - start);
 }
 

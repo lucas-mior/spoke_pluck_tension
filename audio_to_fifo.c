@@ -11,7 +11,6 @@
 #include <libgen.h>
 #include <rtaudio/rtaudio_c.h>
 
-static char *program;
 #include "util.c"
 
 #define SAMPLE_RATE 44100
