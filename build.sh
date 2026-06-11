@@ -25,7 +25,7 @@ build() {
     ctags --kinds-C=+l *.h *.c || true
     vtags.sed tags > .tags.vim || true
     
-    $CC $CFLAGS -o audio_to_fifo $SRC $LDFLAGS
+    $CC $CFLAGS -o audio_to_fifo audio_to_fifo.c $LDFLAGS
 }
 
 if [ "$1" = "clean" ]; then
