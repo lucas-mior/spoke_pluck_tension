@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Exit immediately if a command exits with a non-zero status
+# shellcheck disable=SC2086
+
 set -e
 
 CC="${CC:-cc}"
