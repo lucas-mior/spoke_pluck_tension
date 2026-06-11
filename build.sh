@@ -9,7 +9,7 @@ CC="${CC:-cc}"
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CPPFLAGS="$CPPFLAGS -Icbase"
 
-CFLAGS="-g -O3 -march=native -fPIC -flto"
+CFLAGS="$CFLAGS -g -O3 -march=native -fPIC -flto"
 CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-unused-macros"
