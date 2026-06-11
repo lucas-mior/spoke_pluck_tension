@@ -14,15 +14,13 @@ CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
 
 LDFLAGS="-lm -lrtaudio"
 
-SRC="audio_to_fifo.c"
-
 clean() {
     rm -f audio_to_fifo
 }
 
 build() {
     # The '-' prefix in the Makefile ignores errors; '|| true' replicates this behavior
-    ctags --kinds-C=+l *.h *.c || true
+    ctags --kinds-C=+l ./**/*.h ./**/*.c || true
     vtags.sed tags > .tags.vim || true
     
     $CC $CFLAGS -o audio_to_fifo audio_to_fifo.c $LDFLAGS
