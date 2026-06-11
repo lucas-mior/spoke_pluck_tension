@@ -26,7 +26,6 @@ clean() {
 }
 
 build() {
-    # The '-' prefix in the Makefile ignores errors; '|| true' replicates this behavior
     ctags --kinds-C=+l ./**/*.h ./**/*.c || true
     vtags.sed tags > .tags.vim || true
     
