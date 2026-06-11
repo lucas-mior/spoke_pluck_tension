@@ -3,14 +3,21 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-CC="clang"
+CC="${CC:-cc}"
 
 CFLAGS="-g -O3 -march=native -fPIC -flto -D_DEFAULT_SOURCE -I cbase"
 CFLAGS="$CFLAGS -Wall -Wextra"
-CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage -Wno-unused-macros -Wno-unused-function"
-CFLAGS="$CFLAGS -Weverything -Wno-format-nonliteral"
-CFLAGS="$CFLAGS -Wno-constant-logical-operand"
-CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
+CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Wno-unused-macros"
+CFLAGS="$CFLAGS -Wno-unused-function"
+CFLAGS="$CFLAGS -Wno-discarded-qualifiers"
+
+if [ "$CC" = "clang" ]; then
+    CFLAGS="$CFLAGS -Weverything -Wno-format-nonliteral"
+    CFLAGS="$CFLAGS -Wno-constant-logical-operand"
+    CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
+    CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
+fi
 
 LDFLAGS="-lm -lrtaudio"
 
