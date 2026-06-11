@@ -25,11 +25,11 @@ fi
 
 LDFLAGS="-lm -lrtaudio"
 
-clean() {
+clean () {
     rm -f audio_to_fifo
 }
 
-build() {
+build () {
     ctags --kinds-C=+l ./**/*.h ./**/*.c || true
     vtags.sed tags > .tags.vim || true
     
