@@ -28,7 +28,7 @@ record_callback(void *output_buffer, void *input_buffer,
                 unsigned int status, void *user_data) {
     static int16 dummy_buffer[FRAMES_PER_BUFFER] = {0};
     int *fifo = user_data;
-    const int16 *in = input_buffer;
+    int16 *in = input_buffer;
     (void)output_buffer;
     (void)stream_time;
 
