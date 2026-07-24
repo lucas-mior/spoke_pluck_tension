@@ -15,6 +15,7 @@ CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-unused-macros"
 CFLAGS="$CFLAGS -Wno-unused-function"
+CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 
 if [ "$CC" = gcc ]; then
     CFLAGS="$CFLAGS -Wno-discarded-qualifiers"
@@ -35,6 +36,8 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-covered-switch-default"
     CFLAGS="$CFLAGS -Wno-float-equal"
     CFLAGS="$CFLAGS -Wno-incompatible-pointer-types-discards-qualifiers"
+    CFLAGS="$CFLAGS -Wno-assign-enum"
+    CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
 fi
 
 LDFLAGS="-lm -lrtaudio"
