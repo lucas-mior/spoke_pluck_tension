@@ -53,9 +53,20 @@ build () {
     $CC $CPPFLAGS $CFLAGS -o audio_to_fifo audio_to_fifo.c $LDFLAGS
 }
 
-if [ "$1" = "clean" ]; then
+case "${1:-build}" in
+"clean")
     clean
-else
+    ;;
+"check")
+    CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" "$0" build
+    CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
+    CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
+    CFLAGS="$CFLAGS -Xanalyzer -analyzer-opt-analyze-headers"
+    CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
+    CFLAGS="$CFLAGS -fno-color-diagnostics"
+    CC=clang CFLAGS="$CFLAGS" "$0" build
+    ;;
+"build"|*)
     build
-fi
-
+    ;;
+esac
