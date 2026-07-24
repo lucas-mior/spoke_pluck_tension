@@ -11,7 +11,8 @@
 #include <libgen.h>
 #include <rtaudio/rtaudio_c.h>
 
-#include "util.c"
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 4096
