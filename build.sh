@@ -14,7 +14,6 @@ CFLAGS="$CFLAGS -g -O3 -march=native -fPIC -flto"
 CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-unused-macros"
-CFLAGS="$CFLAGS -Wno-unused-function"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 
 if [ "$CC" = gcc ]; then
