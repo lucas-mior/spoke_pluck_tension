@@ -56,6 +56,8 @@ case "${1:-build}" in
 "clean")
     clean
     ;;
+"test")
+    ;;
 "check")
     CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" "$0" build
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
