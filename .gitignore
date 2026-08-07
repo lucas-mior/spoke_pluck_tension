@@ -10,5 +10,8 @@ tuner
 *.ods#
 temp_delete_me
 compile_commands.json
+*temp_delete_me*
 *.cmd
 *.o
+bin/
+*.tar.gz
