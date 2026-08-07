@@ -80,11 +80,18 @@ if echo "$OS" | grep -q "Linux"; then
     fi
 fi
 
-if [ "$target" = "test" ] && [ -z "${CC:-}" ] && command -v tcc >/dev/null 2>&1; then
-    CC=tcc
-else
+case "$target" in
+debug|test)
+    CC="${CC:-tcc}"
+    ;;
+fast_feedback)
+    CC="${CC:-clang}"
+    ;;
+*)
     CC="${CC:-cc}"
-fi
+    ;;
+esac
+
 if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Weverything"
     CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
@@ -101,6 +108,7 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
     CFLAGS="$CFLAGS -Wno-bad-function-cast"
 fi
+
 case "$target" in
 "debug")
     CFLAGS="$CFLAGS -g3 -O0 -fsanitize=undefined"
