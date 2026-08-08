@@ -15,7 +15,6 @@ printf "\n${script} ${RED}${1:-} ${2:-}$RES\n"
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-/}"
 
-main="audio_to_fifo.c"
 program="audio_to_fifo"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
@@ -81,7 +80,7 @@ esac
 build_program () {
     build_tags
     trace_on
-    $CC $CPPFLAGS $CFLAGS -o "$exe" "$main" $LDFLAGS
+    $CC $CPPFLAGS $CFLAGS -o "$exe" audio_to_fifo.c $LDFLAGS
     trace_off
 }
 
