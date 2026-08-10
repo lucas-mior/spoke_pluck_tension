@@ -1,14 +1,3 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdatomic.h>
-#include <time.h>
-#include <libgen.h>
 #include <rtaudio/rtaudio_c.h>
 
 #define CBASE_IMPLEMENT
