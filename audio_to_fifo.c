@@ -1,7 +1,7 @@
-#include <rtaudio/rtaudio_c.h>
-
 #define CBASE_IMPLEMENT
 #include "cbase.h"
+
+#include <rtaudio/rtaudio_c.h>
 
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 4096
