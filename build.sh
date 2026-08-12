@@ -52,7 +52,7 @@ LDFLAGS="$LDFLAGS -lm -lrtaudio"
 
 case "$mode" in
 debug)
-    CFLAGS="$CFLAGS -g3 -Og -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3 -Og"
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
