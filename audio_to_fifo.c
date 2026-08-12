@@ -31,9 +31,9 @@ record_callback(void *output_buffer, void *input_buffer,
     }
 
     if (!in) {
-        write64(*fifo, &dummy_buffer, sizeof(dummy_buffer));
+        write64(*fifo, &dummy_buffer, SIZEOF(dummy_buffer));
     } else {
-        write64(*fifo, in, number_frames*sizeof(*in));
+        write64(*fifo, in, number_frames*SIZEOF(*in));
     }
 
     return 0;
