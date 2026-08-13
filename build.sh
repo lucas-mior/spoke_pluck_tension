@@ -64,7 +64,6 @@ fast_feedback)
 test|install|uninstall|clean)
     ;;
 *)
-    CFLAGS="$CFLAGS -O2"
     ;;
 esac
 
@@ -114,7 +113,17 @@ install)
     install -Dm755 "$exe" "${DESTDIR}${PREFIX}/bin/${program}"
     trace_off
     ;;
-*)
+build|debug|fast_feedback)
     build_program
+    ;;
+esac
+
+
+case "$mode" in
+build|check|clean|debug|fast_feedback|install|test|uninstall)
+    ;;
+*)
+    echo "Unknown mode $mode"
+    exit 1
     ;;
 esac
