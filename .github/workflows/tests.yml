@@ -1,0 +1,53 @@
+name: Test on various platforms CI
+
+on:
+  push:
+    branches:
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          xcode-select --install 2>/dev/null || true
+          brew install rtaudio
+          cc --version
+
+      - name: Build
+        run: |
+          CPPFLAGS="-I$(brew --prefix rtaudio)/include" \
+          LDFLAGS="-L$(brew --prefix rtaudio)/lib" \
+          ./build.sh build
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librtaudio-dev
+          cc --version
+
+      - name: Build
+        run: ./build.sh build
+
+  freebsd:
+    runs-on: ubuntu-latest
+    name: FreeBSD VM
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: pkg install -y rtaudio
+          run: |
+            cc --version
+            ./build.sh build
