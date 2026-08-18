@@ -31,7 +31,18 @@ jobs:
       - name: Install build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y librtaudio-dev
+          sudo apt-get install -y cmake libpulse-dev
+          git clone --depth 1 --branch 6.0.1 \
+            https://github.com/thestk/rtaudio.git /tmp/rtaudio
+          cmake -S /tmp/rtaudio -B /tmp/rtaudio/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DRTAUDIO_API_ALSA=OFF \
+            -DRTAUDIO_API_JACK=OFF \
+            -DRTAUDIO_API_PULSE=ON \
+            -DRTAUDIO_BUILD_TESTING=OFF
+          cmake --build /tmp/rtaudio/build --parallel
+          sudo cmake --install /tmp/rtaudio/build
+          sudo ldconfig
           cc --version
 
       - name: Build
