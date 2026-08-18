@@ -61,4 +61,6 @@ jobs:
           prepare: pkg install -y rtaudio
           run: |
             cc --version
-            ./build.sh build
+            CPPFLAGS="-I/usr/local/include" \
+              LDFLAGS="-L/usr/local/lib" \
+              ./build.sh build
