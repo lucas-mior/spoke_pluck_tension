@@ -1,0 +1,331 @@
+
+build.sh [01;38;2;255;000;000mcheck[0m
+
+build.sh [01;38;2;255;000;000mbuild[0m
++ find . -type f -iname tags -delete
++ find . -iname *.[ch] -print0
++ xargs -0 ctags --kinds-C=+l+d
++ + sort
++ uniq
+vtags.sed tags
++ gcc -I/home/lucas/.local/src/000mine/spokes/cbase -fanalyzer -fdiagnostics-color=never -std=c11 -Wfatal-errors -O2 -flto -march=native -ftree-vectorize -o bin/audio_to_fifo audio_to_fifo.c -lm -lrtaudio
+
+build.sh [01;38;2;255;000;000mbuild[0m
++ find . -type f -iname tags -delete
++ xargs -0 ctags --kinds-C=+l+d
++ find . -iname *.[ch] -print0
++ vtags.sed tags
++ + sort
+uniq
++ clang -I/home/lucas/.local/src/000mine/spokes/cbase --analyze -Xanalyzer -analyzer-output=text -Xanalyzer -analyzer-werror -Xanalyzer -analyzer-opt-analyze-headers -Wno-unused-command-line-argument -fno-color-diagnostics -std=c11 -Wfatal-errors -O2 -flto -march=native -ftree-vectorize -o bin/audio_to_fifo audio_to_fifo.c -lm -lrtaudio
+In file included from audio_to_fifo.c:2:
+In file included from /home/lucas/.local/src/000mine/spokes/cbase/cbase.h:749:
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  342 | GENERATE_ASSERT_STRINGS(less, <)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: note: Assuming 'var2' is null
+  342 | GENERATE_ASSERT_STRINGS(less, <)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: note: Assuming 'var1' is null
+  342 | GENERATE_ASSERT_STRINGS(less, <)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:342:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  342 | GENERATE_ASSERT_STRINGS(less, <)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  343 | GENERATE_ASSERT_STRINGS(less_equal, <=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: note: Assuming 'var2' is null
+  343 | GENERATE_ASSERT_STRINGS(less_equal, <=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: note: Assuming 'var1' is null
+  343 | GENERATE_ASSERT_STRINGS(less_equal, <=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:343:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  343 | GENERATE_ASSERT_STRINGS(less_equal, <=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  344 | GENERATE_ASSERT_STRINGS(equal, ==)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: note: Assuming 'var2' is null
+  344 | GENERATE_ASSERT_STRINGS(equal, ==)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: note: Assuming 'var1' is null
+  344 | GENERATE_ASSERT_STRINGS(equal, ==)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:344:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  344 | GENERATE_ASSERT_STRINGS(equal, ==)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  345 | GENERATE_ASSERT_STRINGS(not_equal, !=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: note: Assuming 'var2' is null
+  345 | GENERATE_ASSERT_STRINGS(not_equal, !=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: note: Assuming 'var1' is null
+  345 | GENERATE_ASSERT_STRINGS(not_equal, !=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:345:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  345 | GENERATE_ASSERT_STRINGS(not_equal, !=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  346 | GENERATE_ASSERT_STRINGS(more, >)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: note: Assuming 'var2' is null
+  346 | GENERATE_ASSERT_STRINGS(more, >)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: note: Assuming 'var1' is null
+  346 | GENERATE_ASSERT_STRINGS(more, >)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:346:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  346 | GENERATE_ASSERT_STRINGS(more, >)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  347 | GENERATE_ASSERT_STRINGS(more_equal, >=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: note: Assuming 'var2' is null
+  347 | GENERATE_ASSERT_STRINGS(more_equal, >=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:311:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  311 |     if (var2 && (var1 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: note: Assuming 'var1' is null
+  347 | GENERATE_ASSERT_STRINGS(more_equal, >=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:9: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: note: Left side of '&&' is false
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:320:14: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  320 |     if (var1 && (var2 == NULL)) {                                              \
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:347:1: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  347 | GENERATE_ASSERT_STRINGS(more_equal, >=)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:329:11: note: expanded from macro 'GENERATE_ASSERT_STRINGS'
+  329 |     if (!(strcmp(var1, var2) SYMBOL 0)) {                                      \
+      |           ^      ~~~~
+In file included from audio_to_fifo.c:2:
+In file included from /home/lucas/.local/src/000mine/spokes/cbase/cbase.h:752:
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:146:14: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  146 |     result = memmem(haystack, (size_t)haystack_len, needle, (size_t)needle_len);
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:88:23: note: Calling 'read_entire_file'
+   88 |     if ((buffer_len = read_entire_file(path, &buffer)) < 0) {
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1058:9: note: 'file_bytes' is non-null
+ 1058 |     if (file_bytes) {
+      |         ^~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1058:5: note: Taking true branch
+ 1058 |     if (file_bytes) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1059:9: note: Null pointer value stored to 'buffer'
+ 1059 |         *file_bytes = NULL;
+      |         ^~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1061:9: note: Left side of '||' is false
+ 1061 |     if (path_missing(path) || (file_bytes == NULL)) {
+      |         ^
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1061:32: note: 'file_bytes' is not equal to NULL
+ 1061 |     if (path_missing(path) || (file_bytes == NULL)) {
+      |                                ^~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1061:5: note: Taking false branch
+ 1061 |     if (path_missing(path) || (file_bytes == NULL)) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1066:5: note: Taking true branch
+ 1066 |     if ((file = fopen(path, "rb")) == NULL) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1068:13: note: 'err' is not equal to 0
+ 1068 |         if (err == 0) {
+      |             ^~~
+/home/lucas/.local/src/000mine/spokes/cbase/fs.c:1068:9: note: Taking false branch
+ 1068 |         if (err == 0) {
+      |         ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:88:23: note: Returning from 'read_entire_file'
+   88 |     if ((buffer_len = read_entire_file(path, &buffer)) < 0) {
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:88:9: note: Assuming the condition is false
+   88 |     if ((buffer_len = read_entire_file(path, &buffer)) < 0) {
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:88:5: note: Taking false branch
+   88 |     if ((buffer_len = read_entire_file(path, &buffer)) < 0) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:97:19: note: Passing null pointer value via 1st parameter 'haystack'
+   97 |     if (!memmem64(buffer, buffer_len, needle, needle_len)) {
+      |                   ^~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:97:10: note: Calling 'memmem64'
+   97 |     if (!memmem64(buffer, buffer_len, needle, needle_len)) {
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:134:9: note: 'haystack_len' is > 0
+  134 |     if (haystack_len <= 0) {
+      |         ^~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:134:5: note: Taking false branch
+  134 |     if (haystack_len <= 0) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:137:9: note: Assuming 'needle_len' is > 0
+  137 |     if (needle_len <= 0) {
+      |         ^~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:137:5: note: Taking false branch
+  137 |     if (needle_len <= 0) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:140:9: note: Assuming 'needle_len' is <= 'haystack_len'
+  140 |     if (needle_len > haystack_len) {
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:140:5: note: Taking false branch
+  140 |     if (needle_len > haystack_len) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:146:14: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  146 |     result = memmem(haystack, (size_t)haystack_len, needle, (size_t)needle_len);
+      |              ^      ~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:296:12: error: Null pointer passed to 1st parameter expecting 'nonnull' [core.NonNullParamChecker]
+  296 |     return memcmp(left, right, (size_t)size);
+      |            ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:186:9: note: Assuming 'var2' is null
+  186 |     if (var2 && (var1 == NULL)) {
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:186:14: note: Left side of '&&' is false
+  186 |     if (var2 && (var1 == NULL)) {
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:195:9: note: Assuming 'var1' is null
+  195 |     if (var1 && (var2 == NULL)) {
+      |         ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:195:14: note: Left side of '&&' is false
+  195 |     if (var1 && (var2 == NULL)) {
+      |              ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:205:9: note: Assuming 'var1_len' is equal to 'var2_len'
+  205 |     if (var1_len != var2_len) {
+      |         ^~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:205:5: note: Taking false branch
+  205 |     if (var1_len != var2_len) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:215:18: note: Passing null pointer value via 1st parameter 'left'
+  215 |     if (memcmp64(var1, var2, var1_len) != 0) {
+      |                  ^~~~
+/home/lucas/.local/src/000mine/spokes/cbase/assertions.c:215:9: note: Calling 'memcmp64'
+  215 |     if (memcmp64(var1, var2, var1_len) != 0) {
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:281:9: note: Assuming 'size' is not equal to 0
+  281 |     if (size == 0) {
+      |         ^~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:281:5: note: Taking false branch
+  281 |     if (size == 0) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:284:5: note: Taking false branch
+  284 |     if (DEBUGGING) {
+      |     ^
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:296:12: note: Null pointer passed to 1st parameter expecting 'nonnull'
+  296 |     return memcmp(left, right, (size_t)size);
+      |            ^      ~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:573:13: error: Value stored to 'limit' is never read [deadcode.DeadStores]
+  573 |             limit = MINOF(value);
+      |             ^       ~~~~~~~~~~~~
+/home/lucas/.local/src/000mine/spokes/cbase/util.c:573:13: note: Value stored to 'limit' is never read
+  573 |             limit = MINOF(value);
+      |             ^       ~~~~~~~~~~~~
+9 errors generated.
